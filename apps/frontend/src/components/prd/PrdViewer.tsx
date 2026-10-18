@@ -40,14 +40,14 @@ export function PrdViewer({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white border border-neutral-200 rounded-xl overflow-hidden shadow-sm">
+    <div className="flex flex-col h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm">
       {/* Top Header & Actions Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-neutral-50/90 border-b border-neutral-200">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-neutral-50/90 dark:bg-neutral-900/90 border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-brand-dark" />
-          <span className="text-xs font-semibold text-neutral-800">Dokumen PRD (Markdown)</span>
+          <FileText className="w-4 h-4 text-brand-dark dark:text-brand" />
+          <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">Dokumen PRD (Markdown)</span>
           {isStreaming && (
-            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand/20 text-brand-dark animate-pulse">
+            <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-brand/20 text-brand-dark dark:text-brand animate-pulse">
               <span className="w-1.5 h-1.5 rounded-full bg-brand" />
               Streaming output...
             </span>
@@ -58,9 +58,9 @@ export function PrdViewer({
           <button
             onClick={handleCopy}
             disabled={!content}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-200/60 rounded-md transition"
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-700/60 rounded-md transition"
           >
-            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copied ? "Tersalin" : "Salin"}</span>
           </button>
 
@@ -76,11 +76,11 @@ export function PrdViewer({
       </div>
 
       {/* Markdown Content Area */}
-      <div className="p-6 overflow-y-auto max-h-[600px] text-neutral-800 font-sans text-sm leading-relaxed prose prose-neutral max-w-none prose-headings:font-semibold prose-headings:text-neutral-900 prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-pre:bg-neutral-900 prose-pre:text-neutral-100 prose-table:border prose-th:bg-neutral-100 prose-th:p-2 prose-td:p-2">
+      <div className="p-6 overflow-y-auto max-h-[600px] font-sans text-sm leading-relaxed prose prose-neutral dark:prose-invert max-w-none prose-headings:font-semibold prose-h1:text-xl prose-h2:text-lg prose-h3:text-base prose-pre:bg-neutral-900 prose-pre:text-neutral-100 prose-table:border prose-table:border-neutral-200 dark:prose-table:border-neutral-700 prose-th:bg-neutral-100 dark:prose-th:bg-neutral-800 prose-th:p-2 prose-td:p-2 prose-td:border prose-td:border-neutral-200 dark:prose-td:border-neutral-800">
         {content ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         ) : (
-          <div className="py-12 text-center text-xs text-neutral-400">
+          <div className="py-12 text-center text-xs text-neutral-400 dark:text-neutral-500">
             Dokumen PRD belum dibuat. Mulai dari Step 1 untuk mengalirkan dokumen.
           </div>
         )}

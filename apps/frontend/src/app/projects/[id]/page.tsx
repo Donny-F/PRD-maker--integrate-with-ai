@@ -226,17 +226,17 @@ export default function ProjectDetailPage({
   if (status === "loading" || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-dark" />
-        <span className="text-xs text-neutral-500">Memuat data proyek...</span>
+        <Loader2 className="w-6 h-6 animate-spin text-brand-dark dark:text-brand" />
+        <span className="text-xs text-neutral-500 dark:text-neutral-400">Memuat data proyek...</span>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="p-8 text-center bg-white border border-neutral-200 rounded-2xl">
+      <div className="p-8 text-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl">
         <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-2" />
-        <h3 className="font-bold text-sm text-neutral-900">Proyek Tidak Ditemukan</h3>
+        <h3 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">Proyek Tidak Ditemukan</h3>
       </div>
     );
   }
@@ -247,30 +247,30 @@ export default function ProjectDetailPage({
   return (
     <div className="space-y-6">
       {/* Project Header Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-neutral-200">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-900 text-brand">
               <GitBranch className="w-3 h-3 text-brand" />
               v{activeVersion?.versionNumber || 1} Aktif
             </span>
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-neutral-400 dark:text-neutral-500">
               Dibuat: {new Date(project.createdAt).toLocaleDateString("id-ID")}
             </span>
           </div>
-          <h1 className="text-xl font-extrabold text-neutral-900 tracking-tight">
+          <h1 className="text-xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
             {project.title}
           </h1>
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex items-center p-1 bg-neutral-100 rounded-xl border border-neutral-200">
+        <div className="flex items-center p-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-800">
           <button
             onClick={() => setViewMode("both")}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
               viewMode === "both"
-                ? "bg-white text-neutral-950 shadow-sm"
-                : "text-neutral-600 hover:text-neutral-900"
+                ? "bg-white dark:bg-neutral-900 text-neutral-950 dark:text-neutral-50 shadow-sm"
+                : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
             }`}
           >
             <Columns2 className="w-3.5 h-3.5" />
@@ -280,8 +280,8 @@ export default function ProjectDetailPage({
             onClick={() => setViewMode("prd")}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
               viewMode === "prd"
-                ? "bg-white text-neutral-950 shadow-sm"
-                : "text-neutral-600 hover:text-neutral-900"
+                ? "bg-white dark:bg-neutral-900 text-neutral-950 dark:text-neutral-50 shadow-sm"
+                : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
@@ -291,8 +291,8 @@ export default function ProjectDetailPage({
             onClick={() => setViewMode("diagram")}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
               viewMode === "diagram"
-                ? "bg-white text-neutral-950 shadow-sm"
-                : "text-neutral-600 hover:text-neutral-900"
+                ? "bg-white dark:bg-neutral-900 text-neutral-950 dark:text-neutral-50 shadow-sm"
+                : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
             }`}
           >
             <Network className="w-3.5 h-3.5" />
@@ -303,15 +303,15 @@ export default function ProjectDetailPage({
 
       {/* Real-time Status / Error banners */}
       {statusMessage && (
-        <div className="flex items-center gap-2 p-3 bg-brand/10 border border-brand/30 text-brand-dark text-xs rounded-xl font-medium animate-pulse">
-          <Loader2 className="w-4 h-4 animate-spin text-brand-dark" />
+        <div className="flex items-center gap-2 p-3 bg-brand/10 border border-brand/30 text-brand-dark dark:text-brand text-xs rounded-xl font-medium animate-pulse">
+          <Loader2 className="w-4 h-4 animate-spin text-brand-dark dark:text-brand" />
           <span>{statusMessage}</span>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl font-medium">
-          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+        <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs rounded-xl font-medium">
+          <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -343,18 +343,18 @@ export default function ProjectDetailPage({
       </div>
 
       {/* Bottom Section: Step 5 Revisi & Version History */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 border-t border-neutral-200">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 border-t border-neutral-200 dark:border-neutral-800">
         {/* Step 5: Revision Prompt Input */}
-        <div className="lg:col-span-7 bg-white border border-neutral-200 rounded-2xl p-6 shadow-sm">
+        <div className="lg:col-span-7 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-brand/15 text-brand-dark flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center">
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
+              <h3 className="text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">
                 Step 5: Revisi & Iterasi PRD
               </h3>
-              <p className="text-[11px] text-neutral-500">
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
                 Masukkan instruksi perubahan. AI akan memperbarui PRD markdown dan menyinkronkan bagan diagram.
               </p>
             </div>
@@ -367,11 +367,11 @@ export default function ProjectDetailPage({
               disabled={isRevising || isStreamingPrd}
               rows={3}
               placeholder="Contoh: Tambahkan modul sistem notifikasi email pada Fase 2 dan perinci arsitektur autentikasi..."
-              className="w-full px-3.5 py-2.5 text-xs leading-relaxed border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:bg-neutral-100"
+              className="w-full px-3.5 py-2.5 text-xs leading-relaxed border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:bg-neutral-100 dark:disabled:bg-neutral-800"
             />
 
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-neutral-400">
+              <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
                 Setiap revisi akan disimpan sebagai versi baru (v2, v3, dst).
               </span>
 

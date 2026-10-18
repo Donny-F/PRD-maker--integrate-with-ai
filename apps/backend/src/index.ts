@@ -6,6 +6,7 @@ import morgan from "morgan";
 import { authRouter } from "./routes/auth";
 import { llmRouter } from "./routes/llm";
 import { projectsRouter } from "./routes/projects";
+import { usersRouter } from "./routes/users";
 
 const app = express();
 const port = Number(process.env.PORT) || 5000;
@@ -29,6 +30,7 @@ app.get("/api/v1/health", (_req, res) => {
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/llms", llmRouter);
 app.use("/api/v1/projects", projectsRouter);
+app.use("/api/v1/users", usersRouter);
 
 // Global Error Handler
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

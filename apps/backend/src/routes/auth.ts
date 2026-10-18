@@ -1,63 +1,91 @@
-import { Router, Request, Response } from "express";
+import { Router, type Request, type RequestHandler, type Response } from "express";
 import jwt from "jsonwebtoken";
+import { z } from "zod";
 import { prisma } from "../db";
-import { Role } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { authMiddleware } from "../middleware/auth";
 
 export const authRouter = Router();
 
-// Dev Mode Credentials Login
-authRouter.post("/dev-login", async (req: Request, res: Response): Promise<void> => {
-  const { email, role, name } = req.body;
+const oauthSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Format email tidak valid"),
+  name: z.string().trim().max(100).nullish(),
+  image: z.string().url().max(2048).nullish(),
+  provider: z.string().trim().min(1).max(50),
+});
 
-  if (!email) {
-    res.status(400).json({ error: "Email is required" });
-    return;
+class HttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
   }
+}
 
-  const userRole = role === "ADMIN" ? Role.ADMIN : Role.USER;
+function asyncRoute(handler: (req: Request, res: Response) => Promise<void>): RequestHandler {
+  return (req, res, next) => {
+    handler(req, res).catch((error: unknown) => {
+      if (error instanceof HttpError) {
+        res.status(error.status).json({ error: error.message });
+        return;
+      }
+      next(error as Error);
+    });
+  };
+}
 
-  // Find or create user
-  const user = await prisma.user.upsert({
-    where: { email },
-    update: {
-      role: userRole,
-      ...(name ? { name } : {}),
-    },
-    create: {
-      email,
-      name: name || (userRole === Role.ADMIN ? "Admin User" : "Demo User"),
-      role: userRole,
-    },
-  });
-
+function requireSecret(): string {
   const secret = process.env.AUTH_SECRET;
-  if (!secret) {
-    res.status(500).json({ error: "AUTH_SECRET is not configured" });
-    return;
-  }
+  if (!secret) throw new HttpError(500, "AUTH_SECRET is not configured");
+  return secret;
+}
 
-  const token = jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-    },
-    secret,
+function issueAuthToken(user: User): string {
+  return jwt.sign(
+    { id: user.id, email: user.email, role: user.role, name: user.name },
+    requireSecret(),
     { expiresIn: "7d" }
   );
+}
 
-  res.json({
-    token,
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    },
-  });
-});
+function publicUser(user: User) {
+  return { id: user.id, email: user.email, name: user.name, role: user.role };
+}
+
+// OAuth callback bridge: NextAuth exchanges a verified provider profile for a
+// backend access token. Only the Next.js server may call this endpoint.
+authRouter.post(
+  "/oauth",
+  asyncRoute(async (req, res) => {
+    const provided = req.header("x-internal-secret");
+    if (!provided || provided !== requireSecret()) {
+      throw new HttpError(401, "Unauthorized");
+    }
+
+    const parsed = oauthSchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new HttpError(400, parsed.error.issues[0]?.message || "Data permintaan tidak valid");
+    }
+
+    const { email, name, image, provider } = parsed.data;
+    const user = await prisma.user.upsert({
+      where: { email },
+      update: {
+        ...(name ? { name } : {}),
+        ...(image ? { image } : {}),
+      },
+      create: {
+        email,
+        name: name || email.split("@")[0],
+        image: image || null,
+      },
+    });
+
+    console.log(`[auth] OAuth sign-in via ${provider}: ${email}`);
+    res.json({ token: issueAuthToken(user), user: publicUser(user) });
+  })
+);
 
 // Get current logged-in user profile
 authRouter.get("/me", authMiddleware, async (req: Request, res: Response): Promise<void> => {

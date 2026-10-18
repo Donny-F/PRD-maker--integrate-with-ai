@@ -16,6 +16,16 @@ export interface AdminLlmConfig extends LlmModel {
   updatedAt: string;
 }
 
+export interface AdminUser {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  role: "ADMIN" | "USER";
+  createdAt: string;
+  projectCount: number;
+}
+
 export interface DiagramNode {
   id: string;
   label: string;
@@ -58,6 +68,31 @@ export interface Project {
   updatedAt: string;
 }
 
+export class UnauthorizedError extends Error {
+  constructor(message = "Sesi login tidak valid atau telah berakhir") {
+    super(message);
+    this.name = "UnauthorizedError";
+  }
+}
+
+// Single-flight: several parallel requests can 401 at once; log out only once.
+let signOutPromise: Promise<void> | null = null;
+
+function forceReauth(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (!signOutPromise) {
+    signOutPromise = import("next-auth/react")
+      .then(({ signOut }) => signOut({ callbackUrl: "/login" }))
+      .catch(() => {
+        window.location.href = "/login";
+      })
+      .finally(() => {
+        signOutPromise = null;
+      });
+  }
+  return signOutPromise;
+}
+
 export async function fetchWithAuth<T>(
   endpoint: string,
   token?: string,
@@ -74,6 +109,13 @@ export async function fetchWithAuth<T>(
     headers,
   });
 
+  if (response.status === 401 && token) {
+    // Token expired or signed with a different AUTH_SECRET: drop the NextAuth
+    // session and send the user back to the login page.
+    await forceReauth();
+    throw new UnauthorizedError();
+  }
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(errorData.error || `Request failed with status ${response.status}`);
@@ -87,6 +129,7 @@ export const api = {
   getModels: () => fetchWithAuth<{ models: LlmModel[] }>("/llms"),
   getAdminConfigs: (token: string) =>
     fetchWithAuth<{ configs: AdminLlmConfig[] }>("/llms/admin", token),
+  
   createAdminConfig: (token: string, body: Record<string, unknown>) =>
     fetchWithAuth<{ config: LlmModel }>("/llms/admin", token, {
       method: "POST",
@@ -152,4 +195,14 @@ export const api = {
     fetchWithAuth<{ success: boolean }>(`/projects/${projectId}`, token, {
       method: "DELETE",
     }),
+
+  // Admin: user roles
+  getUsers: (token: string) =>
+    fetchWithAuth<{ users: AdminUser[] }>("/users", token),
+  updateUserRole: (token: string, id: string, role: "ADMIN" | "USER") =>
+    fetchWithAuth<{ user: AdminUser }>(`/users/${id}/role`, token, {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }),
 };
+

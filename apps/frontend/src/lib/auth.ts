@@ -1,5 +1,4 @@
 import { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
 
@@ -11,51 +10,6 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   providers: [
-    CredentialsProvider({
-      id: "credentials",
-      name: "Dev Mode Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        role: { label: "Role", type: "text" },
-        name: { label: "Name", type: "text" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
-
-        try {
-          const res = await fetch(`${API_URL}/auth/dev-login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.email,
-              role: credentials.role || "USER",
-              name: credentials.name,
-            }),
-          });
-
-          if (!res.ok) {
-            console.error("Backend auth dev-login failed", await res.text());
-            return null;
-          }
-
-          const data = (await res.json()) as {
-            token: string;
-            user: { id: string; email: string; name?: string; role: "ADMIN" | "USER" };
-          };
-
-          return {
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.name,
-            role: data.user.role,
-            accessToken: data.token,
-          };
-        } catch (error) {
-          console.error("Dev login authorization error:", error);
-          return null;
-        }
-      },
-    }),
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
       ? [
           GoogleProvider({
@@ -74,12 +28,66 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = user.role || "USER";
         token.accessToken = user.accessToken;
       }
+
+      // OAuth sign-ins have no backend token yet. Exchange the verified provider
+      // profile for one so the REST API can authorize subsequent requests.
+      if (user && account && !token.accessToken) {
+        try {
+          const res = await fetch(`${API_URL}/auth/oauth`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-internal-secret": process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "",
+            },
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              provider: account.provider,
+            }),
+            cache: "no-store",
+          });
+
+          if (!res.ok) throw new Error(await res.text());
+
+          const data = (await res.json()) as {
+            token: string;
+            user: { id: string; role: "ADMIN" | "USER" };
+          };
+          token.id = data.user.id;
+          token.role = data.user.role;
+          token.accessToken = data.token;
+        } catch (error) {
+          console.error("OAuth backend sync failed:", error);
+          throw new Error("Gagal menyinkronkan akun OAuth dengan server. Coba lagi.");
+        }
+      }
+
+      // Roles can be changed by an admin after this session was issued; refresh
+      // the claim from the backend so promotions/demotions apply immediately.
+      if (!user && token.accessToken) {
+        try {
+          const res = await fetch(`${API_URL}/auth/me`, {
+            headers: { Authorization: `Bearer ${token.accessToken}` },
+            cache: "no-store",
+          });
+          if (res.ok) {
+            const data = (await res.json()) as { user?: { role?: "ADMIN" | "USER" } };
+            if (data.user?.role) {
+              token.role = data.user.role;
+            }
+          }
+        } catch {
+          // Backend unreachable: keep the last known role.
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

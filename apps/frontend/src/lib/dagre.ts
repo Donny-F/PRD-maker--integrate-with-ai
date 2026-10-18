@@ -44,6 +44,8 @@ export function getLayoutedElements(
       id: node.id,
       type: "customNode",
       position: { x, y },
+      initialWidth: NODE_WIDTH,
+      initialHeight: NODE_HEIGHT,
       data: {
         label: node.label,
         phase: node.phase,

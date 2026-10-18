@@ -137,16 +137,16 @@ export default function NewProjectPage() {
     <div className="max-w-3xl mx-auto py-4">
       {/* Step Indicator Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between text-xs font-semibold text-neutral-500 mb-2">
-          <span className={currentStep === 1 ? "text-neutral-900 font-bold" : "text-neutral-400"}>
+        <div className="flex items-center justify-between text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-2">
+          <span className={currentStep === 1 ? "text-neutral-900 dark:text-neutral-100 font-bold" : "text-neutral-400 dark:text-neutral-500"}>
             Step 1: Ide & Prompt Awal
           </span>
-          <span className={currentStep === 2 ? "text-neutral-900 font-bold" : "text-neutral-400"}>
+          <span className={currentStep === 2 ? "text-neutral-900 dark:text-neutral-100 font-bold" : "text-neutral-400 dark:text-neutral-500"}>
             Step 2: Klarifikasi AI
           </span>
-          <span className="text-neutral-400">Step 3-4: Pembuatan PRD & Diagram</span>
+          <span className="text-neutral-400 dark:text-neutral-500">Step 3-4: Pembuatan PRD & Diagram</span>
         </div>
-        <div className="w-full bg-neutral-200 h-1.5 rounded-full overflow-hidden">
+        <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
           <div
             className="bg-brand h-full transition-all duration-300"
             style={{ width: currentStep === 1 ? "33%" : "66%" }}
@@ -155,21 +155,21 @@ export default function NewProjectPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl">
+        <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs rounded-xl">
           {error}
         </div>
       )}
 
       {currentStep === 1 ? (
         /* STEP 1: PROMPTING AWAL */
-        <div className="bg-white border border-neutral-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
-            <div className="w-10 h-10 rounded-xl bg-brand/15 text-brand-dark flex items-center justify-center">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="w-10 h-10 rounded-xl bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center">
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-neutral-900">Mulai Proyek PRD Baru</h2>
-              <p className="text-xs text-neutral-500">
+              <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">Mulai Proyek PRD Baru</h2>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">
                 Pilih model kecerdasan buatan dan jelaskan ide produk Anda sedetail mungkin.
               </p>
             </div>
@@ -178,17 +178,17 @@ export default function NewProjectPage() {
           <form onSubmit={handleStep1Submit} className="space-y-5">
             {/* Model Selector */}
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                 Model LLM yang Digunakan
               </label>
               {isLoadingModels ? (
-                <div className="h-10 bg-neutral-100 rounded-lg animate-pulse" />
+                <div className="h-10 bg-neutral-100 dark:bg-neutral-800 rounded-lg animate-pulse" />
               ) : (
                 <div className="relative">
                   <select
                     value={selectedModelId}
                     onChange={(e) => setSelectedModelId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-medium border border-neutral-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                    className="w-full px-3.5 py-2.5 text-xs font-medium border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
                   >
                     {models.map((m) => (
                       <option key={m.id} value={m.id}>
@@ -202,7 +202,7 @@ export default function NewProjectPage() {
 
             {/* Project Title */}
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                 Nama / Judul Proyek
               </label>
               <input
@@ -211,13 +211,13 @@ export default function NewProjectPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Contoh: Marketplace B2B Hasil Tani Nusantara"
                 required
-                className="w-full px-3.5 py-2.5 text-xs border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                className="w-full px-3.5 py-2.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
               />
             </div>
 
             {/* Initial Prompt */}
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 mb-1.5">
+              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                 Deskripsi Ide & Kebutuhan Proyek
               </label>
               <textarea
@@ -226,7 +226,7 @@ export default function NewProjectPage() {
                 rows={7}
                 placeholder="Jelaskan apa yang ingin Anda bangun, masalah yang diselesaikan, target pengguna, dan fitur-fitur utama yang dibayangkan..."
                 required
-                className="w-full px-3.5 py-3 text-xs leading-relaxed border border-neutral-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand resize-y"
+                className="w-full px-3.5 py-3 text-xs leading-relaxed border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand resize-y"
               />
             </div>
 
@@ -254,15 +254,15 @@ export default function NewProjectPage() {
         </div>
       ) : (
         /* STEP 2: KLARIFIKASI AI */
-        <div className="bg-white border border-neutral-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-100">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-100 dark:border-neutral-800">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand/15 text-brand-dark flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-neutral-900">Step 2: Pertanyaan Klarifikasi AI</h2>
-                <p className="text-xs text-neutral-500">
+                <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">Step 2: Pertanyaan Klarifikasi AI</h2>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">
                   AI telah menganalisis ide Anda dan memerlukan detail berikut untuk menyusun PRD yang optimal.
                 </p>
               </div>
@@ -273,7 +273,7 @@ export default function NewProjectPage() {
               type="button"
               onClick={handleSkipClarifications}
               disabled={isSubmittingStep2}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition"
             >
               <SkipForward className="w-3.5 h-3.5" />
               <span>Lewati Klarifikasi & Langsung Buat PRD</span>
@@ -282,16 +282,16 @@ export default function NewProjectPage() {
 
           <form onSubmit={handleStep2Submit} className="space-y-5">
             {questions.map((q, idx) => (
-              <div key={q.id} className="p-4 rounded-xl border border-neutral-200 bg-neutral-50/50">
+              <div key={q.id} className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
                 <div className="flex items-start gap-2.5 mb-2">
                   <div className="w-5 h-5 rounded-full bg-brand text-neutral-950 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                     {idx + 1}
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-neutral-900 leading-snug">{q.question}</h4>
+                    <h4 className="text-xs font-bold text-neutral-900 dark:text-neutral-100 leading-snug">{q.question}</h4>
                     {q.context && (
-                      <p className="text-[11px] text-neutral-500 mt-0.5 flex items-center gap-1">
-                        <HelpCircle className="w-3 h-3 text-neutral-400 shrink-0" />
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
+                        <HelpCircle className="w-3 h-3 text-neutral-400 dark:text-neutral-500 shrink-0" />
                         {q.context}
                       </p>
                     )}
@@ -305,7 +305,7 @@ export default function NewProjectPage() {
                   }
                   rows={2}
                   placeholder="Ketik jawaban atau preferensi Anda..."
-                  className="w-full mt-2 px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                  className="w-full mt-2 px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
                 />
               </div>
             ))}
@@ -315,7 +315,7 @@ export default function NewProjectPage() {
                 type="button"
                 onClick={handleSkipClarifications}
                 disabled={isSubmittingStep2}
-                className="text-xs text-neutral-500 hover:text-neutral-800 font-medium"
+                className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:text-neutral-200 font-medium"
               >
                 Lewati pertanyaan dan gunakan asumsi default AI
               </button>
