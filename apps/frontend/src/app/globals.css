@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+  }
+
+  body {
+    @apply bg-[#fafafa] text-neutral-900 antialiased selection:bg-[#ffc200]/30 selection:text-neutral-900;
+  }
+}
