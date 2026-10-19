@@ -130,7 +130,8 @@ function groupSubfeatures(data: DiagramData): CompactDiagram {
 
 export function getLayoutedElements(
   data: DiagramData,
-  direction: "LR" | "TB" = "LR"
+  direction: "LR" | "TB" = "LR",
+  isDark = false
 ): { nodes: Node[]; edges: Edge[] } {
   const compact = groupSubfeatures(data);
 
@@ -186,7 +187,7 @@ export function getLayoutedElements(
     target: edge.target,
     label: edge.label,
     animated: true,
-    style: { stroke: "#ffc200", strokeWidth: 2 },
+    style: { stroke: isDark ? "#ffc200" : "#b38800", strokeWidth: 2 },
   }));
 
   return {

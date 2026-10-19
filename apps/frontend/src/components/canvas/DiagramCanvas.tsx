@@ -42,8 +42,8 @@ export function DiagramCanvas({
     if (!data.nodes || data.nodes.length === 0) {
       return { nodes: [], edges: [] };
     }
-    return getLayoutedElements(data, "LR");
-  }, [data]);
+    return getLayoutedElements(data, "LR", isDark);
+  }, [data, isDark]);
 
   const handleExportPng = useCallback(async () => {
     if (!reactFlowWrapper.current || layouted.nodes.length === 0) return;
@@ -73,7 +73,7 @@ export function DiagramCanvas({
       );
 
       const dataUrl = await toPng(viewportElem, {
-        backgroundColor: isDark ? "#171717" : "#ffffff",
+        backgroundColor: isDark ? "#171717" : "#fafafa",
         width: imageWidth,
         height: imageHeight,
         pixelRatio: 2, // 2x crisp export
@@ -124,7 +124,7 @@ export function DiagramCanvas({
   }
 
   return (
-    <div className="relative w-full h-[600px] border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white dark:bg-neutral-900 shadow-sm">
+    <div className="relative w-full h-[600px] border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-900 shadow-sm">
       {/* Top Floating Action Bar */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-2 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm p-1 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-sm">
         {onRefresh && (
@@ -167,8 +167,8 @@ export function DiagramCanvas({
           <Background
             variant={BackgroundVariant.Dots}
             gap={16}
-            size={1}
-            color={isDark ? "#525252" : "#cbd5e1"}
+            size={isDark ? 1 : 2}
+            color={isDark ? "#525252" : "#94a3b8"}
           />
           <Controls showInteractive={false} position="bottom-left" />
           <MiniMap
