@@ -8,10 +8,122 @@ import {
   ClarificationQuestionsSchema,
 } from "../schemas/diagram";
 
+const DEFAULT_QUOTA_COOLDOWN_MS = 15 * 60 * 1000;
+
+type ProviderErrorShape = {
+  status?: number;
+  code?: string;
+  type?: string;
+  message?: string;
+  error?: { code?: string; type?: string; message?: string };
+  headers?: { get?: (name: string) => string | null } | Record<string, string>;
+};
+
+// OpenAI-compatible providers signal exhausted quota through several shapes:
+// HTTP 402 with "Insufficient Balance" (DeepSeek), a dedicated error code, or
+// HTTP 429. All of them mean the account cannot pay for more requests, so the
+// model must be hidden from the picker until the cooldown expires.
+function isQuotaExhaustedError(error: unknown): boolean {
+  const e = (error ?? {}) as ProviderErrorShape;
+  const code = e.code ?? e.error?.code;
+  const type = e.type ?? e.error?.type;
+  const message = `${e.message ?? ""} ${e.error?.message ?? ""}`;
+
+  if (code === "insufficient_quota" || type === "insufficient_quota") return true;
+  // Payment Required is unambiguous: the provider rejected the request for
+  // billing reasons regardless of the wording of the message.
+  if (e.status === 402) return true;
+  if (e.status === 429) return true;
+  if (e.status === 403) {
+    return /quota|billing|credit|balance|payment/i.test(message);
+  }
+  return /insufficient[_\s-]?(quota|balance|credit|funds)|exceeded your current quota|resource[_\s-]?exhausted|quota exceeded|billing|payment required|no credit/i.test(
+    message
+  );
+}
+
+export class LlmQuotaExhaustedError extends Error {
+  constructor(displayName: string, until: Date) {
+    super(
+      `Kuota model ${displayName} habis. Model dinonaktifkan sementara sampai ${until.toLocaleString(
+        "id-ID"
+      )}. Silakan pilih model lain.`
+    );
+    this.name = "LlmQuotaExhaustedError";
+  }
+}
+
+function getRetryAfterMs(error: unknown): number | null {
+  const headers = (error as ProviderErrorShape | undefined)?.headers;
+  if (!headers) return null;
+
+  const headerBag = headers as Record<string, string | undefined>;
+  const raw =
+    typeof headers.get === "function"
+      ? headers.get("retry-after")
+      : headerBag["retry-after"] ?? headerBag["Retry-After"];
+  if (!raw) return null;
+
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.max(5_000, Math.min(seconds * 1000, 60 * 60 * 1000));
+  }
+
+  const date = Date.parse(raw);
+  if (!Number.isNaN(date)) {
+    return Math.max(5_000, Math.min(date - Date.now(), 60 * 60 * 1000));
+  }
+  return null;
+}
+
+async function markQuotaExhausted(configId: string, error: unknown): Promise<Date | null> {
+  if (!isQuotaExhaustedError(error)) return null;
+
+  const cooldownMs = getRetryAfterMs(error) ?? DEFAULT_QUOTA_COOLDOWN_MS;
+  const unavailableUntil = new Date(Date.now() + cooldownMs);
+  try {
+    await prisma.llmConfig.update({
+      where: { id: configId },
+      data: {
+        unavailableUntil,
+        unavailableReason: "Kuota/limit provider habis",
+      },
+    });
+  } catch (updateError) {
+    console.warn("Failed to persist LLM quota cooldown:", updateError);
+  }
+  return unavailableUntil;
+}
+
+async function withQuotaTracking<T>(
+  config: { id: string; displayName: string },
+  operation: () => Promise<T>
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    const unavailableUntil = await markQuotaExhausted(config.id, error);
+    if (unavailableUntil) {
+      throw new LlmQuotaExhaustedError(config.displayName, unavailableUntil);
+    }
+    throw error;
+  }
+}
+
 async function getLlmClient(llmConfigId?: string) {
+  const now = new Date();
   let config = llmConfigId
     ? await prisma.llmConfig.findUnique({ where: { id: llmConfigId } })
-    : await prisma.llmConfig.findFirst({ where: { isActive: true } });
+    : await prisma.llmConfig.findFirst({
+        where: {
+          isActive: true,
+          OR: [{ unavailableUntil: null }, { unavailableUntil: { lte: now } }],
+        },
+      });
+
+  if (!config) {
+    config = await prisma.llmConfig.findFirst({ where: { isActive: true } });
+  }
 
   if (!config) {
     config = await prisma.llmConfig.findFirst();
@@ -19,6 +131,10 @@ async function getLlmClient(llmConfigId?: string) {
 
   if (!config) {
     throw new Error("No LLM configuration found in database");
+  }
+
+  if (config.unavailableUntil && config.unavailableUntil > now) {
+    throw new LlmQuotaExhaustedError(config.displayName, config.unavailableUntil);
   }
 
   let apiKey = "";
@@ -94,18 +210,20 @@ Balas HANYA dengan JSON valid dengan format:
   ]
 }`;
 
-  const response = await client.chat.completions.create({
-    model: config.modelIdentifier,
-    messages: [
-      {
-        role: "system",
-        content:
-          "Anda adalah Senior Product Manager profesional. Kembalikan HANYA format JSON valid tanpa tanda markdown ```json.",
-      },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.7,
-  });
+  const response = await withQuotaTracking(config, () =>
+    client.chat.completions.create({
+      model: config.modelIdentifier,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Anda adalah Senior Product Manager profesional. Kembalikan HANYA format JSON valid tanpa tanda markdown ```json.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+    })
+  );
 
   const content = response.choices[0]?.message?.content || "";
   const cleaned = content.replace(/```json/g, "").replace(/```/g, "").trim();
@@ -208,12 +326,13 @@ Tujuan utamanya adalah menyediakan solusi digital yang efisien, handal, dan muda
     return fullText;
   }
 
-  const stream = await client.chat.completions.create({
-    model: config.modelIdentifier,
-    messages: [
-      {
-        role: "system",
-        content: `Anda adalah Senior Product Manager profesional dan enterprise technical architect.
+  const stream = await withQuotaTracking(config, () =>
+    client.chat.completions.create({
+      model: config.modelIdentifier,
+      messages: [
+        {
+          role: "system",
+          content: `Anda adalah Senior Product Manager profesional dan enterprise technical architect.
 Tugas Anda adalah membuat dokumen PRD (Product Requirements Document) yang sangat detail, terstruktur, dan siap pakai dalam format Markdown standar.
 Gunakan Bahasa Indonesia formal (corporate style).
 Sertakan struktur berikut secara lengkap:
@@ -225,21 +344,24 @@ Sertakan struktur berikut secara lengkap:
 ## 5. Arsitektur Teknis & Tech Stack
 ## 6. Alur Pengguna (User Flow)
 ## 7. Metrik Keberhasilan (KPI)`,
-      },
-      { role: "user", content: userPrompt },
-    ],
-    temperature: 0.7,
-    stream: true,
-  });
+        },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.7,
+      stream: true,
+    })
+  );
 
   let fullResponse = "";
-  for await (const chunk of stream) {
-    const text = chunk.choices[0]?.delta?.content || "";
-    if (text) {
-      fullResponse += text;
-      onChunk(text);
+  await withQuotaTracking(config, async () => {
+    for await (const chunk of stream) {
+      const text = chunk.choices[0]?.delta?.content || "";
+      if (text) {
+        fullResponse += text;
+        onChunk(text);
+      }
     }
-  }
+  });
 
   return fullResponse;
 }
@@ -304,14 +426,16 @@ Format balasan WAJIB murni JSON tanpa tanda kutip markdown \`\`\`json:
     };
   }
 
-  const response = await client.chat.completions.create({
-    model: config.modelIdentifier,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: `Berikut isi dokumen PRD:\n\n${prdContent}` },
-    ],
-    temperature: 0.2,
-  });
+  const response = await withQuotaTracking(config, () =>
+    client.chat.completions.create({
+      model: config.modelIdentifier,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Berikut isi dokumen PRD:\n\n${prdContent}` },
+      ],
+      temperature: 0.2,
+    })
+  );
 
   const content = response.choices[0]?.message?.content || "";
   const cleaned = content.replace(/```json/g, "").replace(/```/g, "").trim();
@@ -363,28 +487,32 @@ export async function streamPRDRevision(
     return full;
   }
 
-  const stream = await client.chat.completions.create({
-    model: config.modelIdentifier,
-    messages: [
-      {
-        role: "system",
-        content:
-          "Anda adalah Senior Product Manager profesional yang memperbarui dokumen PRD berdasarkan instruksi revisi pengguna. Pertahankan struktur PRD yang rapi dalam Markdown.",
-      },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.7,
-    stream: true,
-  });
+  const stream = await withQuotaTracking(config, () =>
+    client.chat.completions.create({
+      model: config.modelIdentifier,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Anda adalah Senior Product Manager profesional yang memperbarui dokumen PRD berdasarkan instruksi revisi pengguna. Pertahankan struktur PRD yang rapi dalam Markdown.",
+        },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.7,
+      stream: true,
+    })
+  );
 
   let full = "";
-  for await (const chunk of stream) {
-    const text = chunk.choices[0]?.delta?.content || "";
-    if (text) {
-      full += text;
-      onChunk(text);
+  await withQuotaTracking(config, async () => {
+    for await (const chunk of stream) {
+      const text = chunk.choices[0]?.delta?.content || "";
+      if (text) {
+        full += text;
+        onChunk(text);
+      }
     }
-  }
+  });
 
   return full;
 }

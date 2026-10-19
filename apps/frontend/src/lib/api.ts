@@ -8,6 +8,9 @@ export interface LlmModel {
   baseUrl: string;
   isActive: boolean;
   hasApiKey: boolean;
+  isAvailable?: boolean;
+  unavailableUntil?: string | null;
+  unavailableReason?: string | null;
 }
 
 export interface AdminLlmConfig extends LlmModel {
@@ -150,29 +153,27 @@ export const api = {
     fetchWithAuth<{ projects: Project[] }>("/projects", token),
   getProject: (token: string, id: string) =>
     fetchWithAuth<{ project: Project }>(`/projects/${id}`, token),
-  createProject: (token: string, body: { title: string; initialPrompt: string }) =>
+  createProject: (
+    token: string,
+    body: {
+      title: string;
+      initialPrompt: string;
+      clarifications?: Array<{ question: string; answer: string }>;
+    }
+  ) =>
     fetchWithAuth<{ project: Project }>("/projects", token, {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  generateClarifications: (token: string, projectId: string, llmConfigId?: string) =>
+  generateClarifications: (token: string, initialPrompt: string, llmConfigId?: string) =>
     fetchWithAuth<{ questions: Array<{ id: string; question: string; context?: string }> }>(
-      `/projects/${projectId}/clarifications`,
+      "/projects/clarifications",
       token,
       {
         method: "POST",
-        body: JSON.stringify({ llmConfigId }),
+        body: JSON.stringify({ initialPrompt, llmConfigId }),
       }
     ),
-  saveClarifications: (
-    token: string,
-    projectId: string,
-    clarifications: Array<{ question: string; answer: string }>
-  ) =>
-    fetchWithAuth<{ project: Project }>(`/projects/${projectId}/clarifications`, token, {
-      method: "PUT",
-      body: JSON.stringify({ clarifications }),
-    }),
   generateDiagram: (token: string, projectId: string, llmConfigId?: string) =>
     fetchWithAuth<{ diagramData: DiagramData; version: ProjectVersion }>(
       `/projects/${projectId}/generate-diagram`,

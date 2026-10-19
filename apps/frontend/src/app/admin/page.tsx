@@ -24,6 +24,7 @@ import {
   ListFilter,
   ChevronLeft,
   ChevronRight,
+  Clock,
 } from "lucide-react";
 
 const USERS_PAGE_SIZE = 10;
@@ -74,6 +75,14 @@ export default function AdminPage() {
   });
   
   const [isSaving, setIsSaving] = useState(false);
+
+  // Manual availability override state
+  const [availabilityConfig, setAvailabilityConfig] = useState<AdminLlmConfig | null>(null);
+  const [availabilityForm, setAvailabilityForm] = useState({
+    unavailableUntil: "",
+    unavailableReason: "",
+  });
+  const [isSavingAvailability, setIsSavingAvailability] = useState(false);
 
   const loadConfigs = useCallback(async () => {
     if (!session?.accessToken) return;
@@ -221,6 +230,41 @@ export default function AdminPage() {
     }
   };
 
+  const handleOpenAvailabilityModal = (cfg: AdminLlmConfig) => {
+    const until = cfg.unavailableUntil ? new Date(cfg.unavailableUntil) : null;
+    setAvailabilityConfig(cfg);
+    setAvailabilityForm({
+      unavailableUntil:
+        until && !Number.isNaN(until.getTime())
+          ? new Date(until.getTime() - until.getTimezoneOffset() * 60_000)
+              .toISOString()
+              .slice(0, 16)
+          : "",
+      unavailableReason: cfg.unavailableReason ?? "",
+    });
+  };
+
+  const handleSaveAvailability = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session?.accessToken || !availabilityConfig) return;
+
+    const until = availabilityForm.unavailableUntil.trim();
+    try {
+      setIsSavingAvailability(true);
+      setError(null);
+      await api.updateAdminConfig(session.accessToken, availabilityConfig.id, {
+        unavailableUntil: until ? new Date(until).toISOString() : null,
+        unavailableReason: until ? availabilityForm.unavailableReason.trim() || null : null,
+      });
+      setAvailabilityConfig(null);
+      await loadConfigs();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gagal menyimpan ketersediaan model");
+    } finally {
+      setIsSavingAvailability(false);
+    }
+  };
+
   const handleDelete = (id: string, name: string) => {
     if (!session?.accessToken) return;
     const token = session.accessToken;
@@ -352,11 +396,14 @@ export default function AdminPage() {
                 <th className="py-3.5 px-4">OpenAI Base URL</th>
                 <th className="py-3.5 px-4">Status Kunci API</th>
                 <th className="py-3.5 px-4">Status Pengguna</th>
+                <th className="py-3.5 px-4">Ketersediaan</th>
                 <th className="py-3.5 px-4 text-right">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-              {configs.map((cfg) => (
+              {configs.map((cfg) => {
+                const isUnavailable = cfg.isAvailable === false;
+                return (
                 <tr key={cfg.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/60 transition">
                   {/* Display Name */}
                   <td className="py-3.5 px-4 font-semibold text-neutral-900 dark:text-neutral-100">
@@ -418,9 +465,53 @@ export default function AdminPage() {
                     </button>
                   </td>
 
+                  {/* Availability (manual cooldown override) */}
+                  <td className="py-3.5 px-4">
+                    {isUnavailable ? (
+                      <div className="space-y-0.5">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
+                          <XCircle className="w-3 h-3" />
+                          Tidak Tersedia
+                        </span>
+                        {cfg.unavailableUntil && (
+                          <div className="text-[10px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+                            s.d.{" "}
+                            {new Date(cfg.unavailableUntil).toLocaleString("id-ID", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        )}
+                        {cfg.unavailableReason && (
+                          <div
+                            className="text-[10px] text-neutral-500 dark:text-neutral-400 max-w-[180px] truncate"
+                            title={cfg.unavailableReason}
+                          >
+                            {cfg.unavailableReason}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                        <CheckCircle className="w-3 h-3" />
+                        Tersedia
+                      </span>
+                    )}
+                  </td>
+
                   {/* Actions */}
                   <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={() => handleOpenAvailabilityModal(cfg)}
+                        title="Atur Ketersediaan Manual"
+                        className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-50 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
+                      >
+                        <Clock className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={() => handleOpenEditModal(cfg)}
                         title="Edit Model / API Key"
@@ -438,7 +529,8 @@ export default function AdminPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -799,6 +891,83 @@ export default function AdminPage() {
                   className="px-5 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold rounded-lg shadow-sm transition disabled:opacity-50"
                 >
                   {isSaving ? "Menyimpan..." : "Simpan Konfigurasi"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dialog for Manual Availability Override */}
+      {availabilityConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+              <div>
+                <h3 className="font-bold text-sm text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-brand-dark dark:text-brand" />
+                  Atur Ketersediaan Manual
+                </h3>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  {availabilityConfig.displayName}
+                </p>
+              </div>
+              <button
+                onClick={() => setAvailabilityConfig(null)}
+                className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 text-base font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAvailability} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  Tidak Tersedia Sampai
+                </label>
+                <input
+                  type="datetime-local"
+                  value={availabilityForm.unavailableUntil}
+                  onChange={(e) =>
+                    setAvailabilityForm((prev) => ({ ...prev, unavailableUntil: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                />
+                <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-1">
+                  Kosongkan tanggal lalu simpan untuk menandai model tersedia kembali.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                  Alasan Tidak Tersedia
+                </label>
+                <input
+                  type="text"
+                  value={availabilityForm.unavailableReason}
+                  onChange={(e) =>
+                    setAvailabilityForm((prev) => ({ ...prev, unavailableReason: e.target.value }))
+                  }
+                  placeholder="Contoh: Kuota provider habis"
+                  disabled={!availabilityForm.unavailableUntil}
+                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setAvailabilityConfig(null)}
+                  className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingAvailability}
+                  className="px-5 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold rounded-lg shadow-sm transition disabled:opacity-50"
+                >
+                  {isSavingAvailability ? "Menyimpan..." : "Simpan Ketersediaan"}
                 </button>
               </div>
             </form>

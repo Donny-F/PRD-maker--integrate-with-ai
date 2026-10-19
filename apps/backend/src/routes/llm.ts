@@ -7,6 +7,7 @@ export const llmRouter = Router();
 
 // Public: Get all active LLM configurations (no encrypted keys exposed)
 llmRouter.get("/", async (_req: Request, res: Response): Promise<void> => {
+  const now = new Date();
   const models = await prisma.llmConfig.findMany({
     where: { isActive: true },
     select: {
@@ -17,19 +18,28 @@ llmRouter.get("/", async (_req: Request, res: Response): Promise<void> => {
       baseUrl: true,
       isActive: true,
       encryptedApiKey: true,
+      unavailableUntil: true,
+      unavailableReason: true,
     },
     orderBy: { createdAt: "asc" },
   });
 
-  const formatted = models.map((m) => ({
-    id: m.id,
-    provider: m.provider,
-    displayName: m.displayName,
-    modelIdentifier: m.modelIdentifier,
-    baseUrl: m.baseUrl,
-    isActive: m.isActive,
-    hasApiKey: Boolean(m.encryptedApiKey),
-  }));
+  const formatted = models.map((m) => {
+    const isAvailable = !m.unavailableUntil || m.unavailableUntil <= now;
+
+    return {
+      id: m.id,
+      provider: m.provider,
+      displayName: m.displayName,
+      modelIdentifier: m.modelIdentifier,
+      baseUrl: m.baseUrl,
+      isActive: m.isActive,
+      hasApiKey: Boolean(m.encryptedApiKey),
+      isAvailable,
+      unavailableUntil: isAvailable ? null : m.unavailableUntil,
+      unavailableReason: isAvailable ? null : m.unavailableReason,
+    };
+  });
 
   res.json({ models: formatted });
 });
@@ -63,6 +73,9 @@ llmRouter.get("/admin", authMiddleware, requireAdmin, async (_req: Request, res:
       isActive: c.isActive,
       hasApiKey: Boolean(c.encryptedApiKey),
       maskedApiKey: maskedKey,
+      isAvailable: !c.unavailableUntil || c.unavailableUntil <= new Date(),
+      unavailableUntil: c.unavailableUntil,
+      unavailableReason: c.unavailableReason,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
     };
@@ -108,7 +121,16 @@ llmRouter.post("/admin", authMiddleware, requireAdmin, async (req: Request, res:
 // Admin: Update LLM config
 llmRouter.put("/admin/:id", authMiddleware, requireAdmin, async (req: Request, res: Response): Promise<void> => {
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const { provider, displayName, modelIdentifier, baseUrl, apiKey, isActive } = req.body;
+  const {
+    provider,
+    displayName,
+    modelIdentifier,
+    baseUrl,
+    apiKey,
+    isActive,
+    unavailableUntil,
+    unavailableReason,
+  } = req.body;
 
   const existing = await prisma.llmConfig.findUnique({ where: { id } });
   if (!existing) {
@@ -126,6 +148,32 @@ llmRouter.put("/admin/:id", authMiddleware, requireAdmin, async (req: Request, r
     updateData.encryptedApiKey = apiKey ? encryptApiKey(apiKey) : null;
   }
 
+  // Manual availability override. Clearing the date also clears the reason:
+  // a reason without an active cooldown is meaningless to the public picker.
+  if (unavailableUntil !== undefined) {
+    if (unavailableUntil === null || unavailableUntil === "") {
+      updateData.unavailableUntil = null;
+      updateData.unavailableReason = null;
+    } else {
+      const parsedUntil = new Date(unavailableUntil);
+      if (Number.isNaN(parsedUntil.getTime())) {
+        res.status(400).json({ error: "unavailableUntil must be a valid date or null" });
+        return;
+      }
+      updateData.unavailableUntil = parsedUntil;
+    }
+  }
+  if (unavailableReason !== undefined && unavailableUntil !== null && unavailableUntil !== "") {
+    if (unavailableReason !== null && typeof unavailableReason !== "string") {
+      res.status(400).json({ error: "unavailableReason must be a string or null" });
+      return;
+    }
+    updateData.unavailableReason =
+      typeof unavailableReason === "string" && unavailableReason.trim()
+        ? unavailableReason.trim()
+        : null;
+  }
+
   const updated = await prisma.llmConfig.update({
     where: { id },
     data: updateData,
@@ -140,6 +188,9 @@ llmRouter.put("/admin/:id", authMiddleware, requireAdmin, async (req: Request, r
       baseUrl: updated.baseUrl,
       isActive: updated.isActive,
       hasApiKey: Boolean(updated.encryptedApiKey),
+      isAvailable: !updated.unavailableUntil || updated.unavailableUntil <= new Date(),
+      unavailableUntil: updated.unavailableUntil,
+      unavailableReason: updated.unavailableReason,
     },
   });
 });

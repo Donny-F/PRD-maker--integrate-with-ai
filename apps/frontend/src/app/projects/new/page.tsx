@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { api, LlmModel } from "@/lib/api";
+import { LlmModelSelect } from "@/components/ui/LlmModelSelect";
 import { Sparkles, Bot, HelpCircle, ArrowRight, SkipForward, Loader2 } from "lucide-react";
 
 interface QuestionItem {
@@ -27,7 +28,6 @@ export default function NewProjectPage() {
   const [initialPrompt, setInitialPrompt] = useState("");
 
   // Clarification states
-  const [createdProjectId, setCreatedProjectId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
@@ -43,51 +43,51 @@ export default function NewProjectPage() {
     }
   }, [status, router]);
 
-  useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        setIsLoadingModels(true);
-        const res = await api.getModels();
-        setModels(res.models);
-        if (res.models.length > 0) {
-          setSelectedModelId(res.models[0].id);
+  const fetchModels = useCallback(async () => {
+    try {
+      setIsLoadingModels(true);
+      const res = await api.getModels();
+      setModels(res.models);
+      setSelectedModelId((current) => {
+        const currentModel = res.models.find((m) => m.id === current);
+        if (currentModel && currentModel.isAvailable !== false) {
+          return current;
         }
-      } catch (err) {
-        console.error("Failed to load models:", err);
-      } finally {
-        setIsLoadingModels(false);
-      }
-    };
-    fetchModels();
+        return res.models.find((m) => m.isAvailable !== false)?.id ?? "";
+      });
+    } catch (err) {
+      console.error("Failed to load models:", err);
+    } finally {
+      setIsLoadingModels(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchModels();
+  }, [fetchModels]);
 
   // Step 1: Submit initial prompt and fetch clarifications
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !initialPrompt.trim() || !session?.accessToken) return;
+    if (!title.trim() || !initialPrompt.trim() || !selectedModelId || !session?.accessToken) return;
 
     try {
       setIsSubmittingStep1(true);
       setError(null);
 
-      // 1. Create project
-      const created = await api.createProject(session.accessToken, {
-        title: title.trim(),
-        initialPrompt: initialPrompt.trim(),
-      });
-      const projectId = created.project.id;
-      setCreatedProjectId(projectId);
-
-      // 2. Fetch Clarification Questions
+      // Generate questions first: no project is persisted if the provider fails.
       const clarifyRes = await api.generateClarifications(
         session.accessToken,
-        projectId,
+        initialPrompt.trim(),
         selectedModelId
       );
 
       setQuestions(clarifyRes.questions);
       setCurrentStep(2);
     } catch (err) {
+      // A provider quota error also marks the model unavailable server-side.
+      // Refresh so the dropdown reflects the cooldown immediately.
+      await fetchModels();
       setError(err instanceof Error ? err.message : "Terjadi kesalahan saat memproses Step 1");
     } finally {
       setIsSubmittingStep1(false);
@@ -96,14 +96,17 @@ export default function NewProjectPage() {
 
   // Step 2: Skip Clarification directly to PRD generation
   const handleSkipClarifications = async () => {
-    if (!createdProjectId || !session?.accessToken) return;
+    if (!session?.accessToken) return;
 
     try {
       setIsSubmittingStep2(true);
-      // Save empty clarifications
-      await api.saveClarifications(session.accessToken, createdProjectId, []);
-      // Navigate to project detail with auto-generation trigger
-      router.push(`/projects/${createdProjectId}?generate=true&model=${selectedModelId}`);
+      setError(null);
+      const created = await api.createProject(session.accessToken, {
+        title: title.trim(),
+        initialPrompt: initialPrompt.trim(),
+        clarifications: [],
+      });
+      router.push(`/projects/${created.project.id}?generate=true&model=${selectedModelId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal melewati klarifikasi");
       setIsSubmittingStep2(false);
@@ -113,7 +116,7 @@ export default function NewProjectPage() {
   // Step 2: Submit Clarification Answers and start PRD generation
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createdProjectId || !session?.accessToken) return;
+    if (!session?.accessToken) return;
 
     try {
       setIsSubmittingStep2(true);
@@ -124,9 +127,13 @@ export default function NewProjectPage() {
         answer: answers[q.id]?.trim() || "Tidak dijawab spesifik",
       }));
 
-      await api.saveClarifications(session.accessToken, createdProjectId, formattedAnswers);
+      const created = await api.createProject(session.accessToken, {
+        title: title.trim(),
+        initialPrompt: initialPrompt.trim(),
+        clarifications: formattedAnswers,
+      });
 
-      router.push(`/projects/${createdProjectId}?generate=true&model=${selectedModelId}`);
+      router.push(`/projects/${created.project.id}?generate=true&model=${selectedModelId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal menyimpan jawaban klarifikasi");
       setIsSubmittingStep2(false);
@@ -178,25 +185,21 @@ export default function NewProjectPage() {
           <form onSubmit={handleStep1Submit} className="space-y-5">
             {/* Model Selector */}
             <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                Model LLM yang Digunakan
-              </label>
-              {isLoadingModels ? (
-                <div className="h-10 bg-neutral-100 dark:bg-neutral-800 rounded-lg animate-pulse" />
-              ) : (
-                <div className="relative">
-                  <select
-                    value={selectedModelId}
-                    onChange={(e) => setSelectedModelId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs font-medium border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                  >
-                    {models.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.displayName} ({m.provider.toUpperCase()} - {m.modelIdentifier})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <LlmModelSelect
+                models={models}
+                value={selectedModelId}
+                onChange={setSelectedModelId}
+                isLoading={isLoadingModels}
+              />
+              {!isLoadingModels && models.some((m) => m.isAvailable === false) && (
+                <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+                  Model yang limitnya habis dinonaktifkan sementara sampai masa cooldown berakhir.
+                </p>
+              )}
+              {!isLoadingModels && models.length > 0 && !models.some((m) => m.isAvailable !== false) && (
+                <p className="mt-1.5 text-[11px] text-rose-600 dark:text-rose-400">
+                  Semua model sedang mencapai limit. Tunggu masa cooldown atau hubungi admin.
+                </p>
               )}
             </div>
 
@@ -234,7 +237,7 @@ export default function NewProjectPage() {
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                disabled={isSubmittingStep1 || !title.trim() || !initialPrompt.trim()}
+                disabled={isSubmittingStep1 || !title.trim() || !initialPrompt.trim() || !selectedModelId}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition disabled:opacity-50"
               >
                 {isSubmittingStep1 ? (
@@ -278,6 +281,22 @@ export default function NewProjectPage() {
               <SkipForward className="w-3.5 h-3.5" />
               <span>Lewati Klarifikasi & Langsung Buat PRD</span>
             </button>
+          </div>
+
+          {/* Model used for the PRD generation (clarifications already generated above) */}
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
+            <LlmModelSelect
+              models={models}
+              value={selectedModelId}
+              onChange={setSelectedModelId}
+              isLoading={isLoadingModels}
+              label="Model LLM untuk Membuat PRD"
+              className="sm:w-96"
+            />
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 sm:pb-2.5">
+              Pertanyaan klarifikasi sudah dibuat. Model ini dipakai untuk menyusun dokumen PRD
+              setelah jawaban dikirim.
+            </p>
           </div>
 
           <form onSubmit={handleStep2Submit} className="space-y-5">

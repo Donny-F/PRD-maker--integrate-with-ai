@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../db";
 import { authMiddleware, AuthenticatedUser } from "../middleware/auth";
 import {
+  LlmQuotaExhaustedError,
   generateClarifications,
   streamPRDDocument,
   generateDiagramData,
@@ -44,7 +45,8 @@ function authenticateSseRequest(req: Request): AuthenticatedUser | null {
 projectsRouter.get("/", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const userId = req.user!.id;
   const projects = await prisma.project.findMany({
-    where: req.user!.role === Role.ADMIN ? {} : { userId },
+    // where: req.user!.role === Role.ADMIN ? {} : { userId },
+    where: { userId },
     orderBy: { updatedAt: "desc" },
     include: {
       versions: {
@@ -62,11 +64,16 @@ projectsRouter.get("/", authMiddleware, async (req: Request, res: Response): Pro
   res.json({ projects });
 });
 
-// Create new project
+// Create new project. Clarifications are written together with the project so
+// no project row exists until the AI step that produced them has succeeded.
 projectsRouter.post("/", authMiddleware, async (req: Request, res: Response): Promise<void> => {
-  const { title, initialPrompt } = req.body;
+  const { title, initialPrompt, clarifications } = req.body;
   if (!title || !initialPrompt) {
     res.status(400).json({ error: "Title and initialPrompt are required" });
+    return;
+  }
+  if (clarifications !== undefined && !Array.isArray(clarifications)) {
+    res.status(400).json({ error: "clarifications must be an array" });
     return;
   }
 
@@ -75,11 +82,34 @@ projectsRouter.post("/", authMiddleware, async (req: Request, res: Response): Pr
       userId: req.user!.id,
       title: title.trim(),
       initialPrompt: initialPrompt.trim(),
+      clarifications: clarifications ?? [],
     },
   });
 
   res.status(201).json({ project });
 });
+
+// Step 2 preview: generate clarification questions without persisting a project.
+// Decoupled from project creation so a provider failure leaves no orphan project.
+projectsRouter.post(
+  "/clarifications",
+  authMiddleware,
+  async (req: Request, res: Response): Promise<void> => {
+    const { initialPrompt, llmConfigId } = req.body;
+    if (!initialPrompt || typeof initialPrompt !== "string") {
+      res.status(400).json({ error: "initialPrompt is required" });
+      return;
+    }
+
+    try {
+      const clarifications = await generateClarifications(initialPrompt.trim(), llmConfigId);
+      res.json(clarifications);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to generate clarifications";
+      res.status(err instanceof LlmQuotaExhaustedError ? 402 : 500).json({ error: message });
+    }
+  }
+);
 
 // Get single project with versions and current version data
 projectsRouter.get("/:id", authMiddleware, async (req: Request, res: Response): Promise<void> => {
@@ -118,60 +148,6 @@ projectsRouter.get("/:id", authMiddleware, async (req: Request, res: Response): 
     },
   });
 });
-
-// Step 2: Generate Clarification Questions
-projectsRouter.post(
-  "/:id/clarifications",
-  authMiddleware,
-  async (req: Request, res: Response): Promise<void> => {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { llmConfigId } = req.body;
-
-    const project = await prisma.project.findUnique({ where: { id } });
-    if (!project) {
-      res.status(404).json({ error: "Project not found" });
-      return;
-    }
-
-    if (project.userId !== req.user!.id && req.user!.role !== Role.ADMIN) {
-      res.status(403).json({ error: "Forbidden" });
-      return;
-    }
-
-    try {
-      const clarifications = await generateClarifications(project.initialPrompt, llmConfigId);
-      res.json(clarifications);
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to generate clarifications";
-      res.status(500).json({ error: message });
-    }
-  }
-);
-
-// Save Clarification Answers or Skip
-projectsRouter.put(
-  "/:id/clarifications",
-  authMiddleware,
-  async (req: Request, res: Response): Promise<void> => {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const { clarifications } = req.body;
-
-    const project = await prisma.project.findUnique({ where: { id } });
-    if (!project) {
-      res.status(404).json({ error: "Project not found" });
-      return;
-    }
-
-    const updated = await prisma.project.update({
-      where: { id },
-      data: {
-        clarifications: clarifications ?? [],
-      },
-    });
-
-    res.json({ project: updated });
-  }
-);
 
 // Step 3: Stream PRD via SSE
 projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promise<void> => {
@@ -315,7 +291,7 @@ projectsRouter.post(
       });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to generate diagram";
-      res.status(500).json({ error: message });
+      res.status(err instanceof LlmQuotaExhaustedError ? 402 : 500).json({ error: message });
     }
   }
 );

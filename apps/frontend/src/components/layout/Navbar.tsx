@@ -94,7 +94,7 @@ export function Navbar() {
                       className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-bold ${
                         isAdmin
                           ? "bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
-                          : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800"
+                          : "hidden bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800"
                       }`}
                     >
                       {session.user.role}
@@ -113,13 +113,16 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <Link
-              href="/login"
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand hover:bg-brand-hover text-neutral-950 transition shadow-sm"
-            >
-              Masuk / Login
-            </Link>
-          )}
+              // LOGIN BUTTON
+              <Link
+                hidden={pathname == "/login"}
+                href="/login"
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand hover:bg-brand-hover text-neutral-950 transition shadow-sm"
+              >
+                Masuk / Login
+              </Link>
+            )
+          }
         </div>
       </div>
     </header>
