@@ -398,6 +398,7 @@ export default function ProjectDetailPage({
               projectTitle={project.title}
               onRefresh={handleRegenerateDiagram}
               isRefreshing={isGeneratingDiagram}
+              compactMinimap={viewMode === "both"}
             />
           </div>
         )}

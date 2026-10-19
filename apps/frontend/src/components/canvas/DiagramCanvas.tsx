@@ -23,6 +23,8 @@ interface DiagramCanvasProps {
   projectTitle?: string;
   onRefresh?: () => void;
   isRefreshing?: boolean;
+  /** Shrinks the minimap when the canvas shares the screen with the PRD document. */
+  compactMinimap?: boolean;
 }
 
 export function DiagramCanvas({
@@ -30,6 +32,7 @@ export function DiagramCanvas({
   projectTitle = "project-prd",
   onRefresh,
   isRefreshing = false,
+  compactMinimap = false,
 }: DiagramCanvasProps) {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
@@ -173,6 +176,11 @@ export function DiagramCanvas({
           <Controls showInteractive={false} position="bottom-left" />
           <MiniMap
             position="bottom-right"
+            style={{
+              width: compactMinimap ? 120 : 200,
+              height: compactMinimap ? 80 : 150,
+              boxSizing: "content-box",
+            }}
             maskColor={isDark ? "rgba(10,10,10,0.7)" : "rgba(255,255,255,0.7)"}
             nodeColor={(n) => {
               const d = n.data as unknown as { nodeType?: string };
