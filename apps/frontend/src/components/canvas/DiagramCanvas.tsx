@@ -178,6 +178,7 @@ export function DiagramCanvas({
               const d = n.data as unknown as { nodeType?: string };
               if (d?.nodeType === "epic") return "#ffc200";
               if (d?.nodeType === "feature") return isDark ? "#a3a3a3" : "#64748b";
+              if (d?.nodeType === "subfeatureGroup") return isDark ? "#737373" : "#94a3b8";
               return isDark ? "#525252" : "#cbd5e1";
             }}
             className="!border !border-neutral-200 dark:!border-neutral-800 !rounded-lg !shadow-sm !overflow-hidden"

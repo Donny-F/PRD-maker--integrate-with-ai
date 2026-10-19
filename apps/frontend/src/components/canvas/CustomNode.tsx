@@ -1,11 +1,12 @@
 import React, { memo } from "react";
 import { Handle, Position, NodeProps } from "@xyflow/react";
-import { Layers, CheckCircle2, Box } from "lucide-react";
+import { Layers, CheckCircle2, Box, ListChecks } from "lucide-react";
 
 interface NodeData {
   label: string;
   phase?: string;
-  nodeType?: "epic" | "feature" | "subfeature";
+  nodeType?: "epic" | "feature" | "subfeature" | "subfeatureGroup";
+  items?: string[];
 }
 
 function CustomNodeComponent({ data }: NodeProps) {
@@ -13,6 +14,43 @@ function CustomNodeComponent({ data }: NodeProps) {
   const isEpic = nodeData.nodeType === "epic";
   const isFeature = nodeData.nodeType === "feature";
   const isSubfeature = nodeData.nodeType === "subfeature";
+  const isSubfeatureGroup = nodeData.nodeType === "subfeatureGroup";
+
+  if (isSubfeatureGroup) {
+    const items = nodeData.items ?? [];
+
+    return (
+      <div className="w-[260px] px-3 py-2.5 rounded-lg shadow-sm border bg-neutral-50/70 dark:bg-neutral-800/60 border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200">
+        <Handle
+          type="target"
+          position={Position.Left}
+          className="w-3 h-3 bg-brand border-2 border-white dark:border-neutral-900 rounded-full !-left-1.5"
+        />
+
+        <div className="flex items-center gap-1.5 mb-2">
+          <ListChecks className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span className="font-semibold tracking-wider uppercase text-[10px] text-neutral-500 dark:text-neutral-400">
+            Sub Fitur
+          </span>
+          <span className="ml-auto text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
+            {items.length}
+          </span>
+        </div>
+
+        <ul className="space-y-0">
+          {items.map((item, idx) => (
+            <li
+              key={`${idx}-${item}`}
+              className="flex gap-1.5 py-1 text-[11px] leading-snug text-neutral-700 dark:text-neutral-300"
+            >
+              <span className="text-brand-dark dark:text-brand select-none">•</span>
+              <span className="min-w-0 break-words">{item}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div
