@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { signIn, getProviders } from "next-auth/react";
 import {
   AlertTriangle,
-  FileCode,
   GitBranch,
   Globe,
   Loader2,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
+import { BrandMark } from "@/components/layout/BrandMark";
 
 const oauthErrors: Record<string, string> = {
   OAuthSignin: "Gagal memulai login OAuth. Coba lagi.",
@@ -90,9 +90,7 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-neutral-900 border border-neutral-700 flex items-center justify-center">
-                <FileCode className="w-5 h-5 text-brand" />
-              </div>
+              <BrandMark className="w-10 h-10 rounded-xl" />
               <div>
                 <div className="font-extrabold text-lg tracking-tight">
                   PRD <span className="text-brand">Maker</span>
@@ -137,9 +135,7 @@ export default function LoginPage() {
         {/* Form panel */}
         <div className="p-6 sm:p-10">
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="w-9 h-9 rounded-lg bg-neutral-950 flex items-center justify-center">
-              <FileCode className="w-5 h-5 text-brand" />
-            </div>
+            <BrandMark className="w-9 h-9 rounded-lg" />
             <div className="font-extrabold tracking-tight text-neutral-900 dark:text-neutral-100">
               PRD <span className="text-brand-dark dark:text-brand">Maker</span>
             </div>

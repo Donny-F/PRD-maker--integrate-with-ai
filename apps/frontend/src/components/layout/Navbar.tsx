@@ -4,7 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { FileCode, LayoutDashboard, PlusCircle, ShieldAlert, LogOut, User } from "lucide-react";
+import { LayoutDashboard, PlusCircle, ShieldAlert, LogOut, User } from "lucide-react";
+import { BrandMark } from "./BrandMark";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
@@ -19,9 +20,7 @@ export function Navbar() {
         {/* Brand Logo */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-neutral-900 dark:ring-1 dark:ring-neutral-700 flex items-center justify-center text-brand font-bold shadow-sm group-hover:scale-105 transition-transform">
-              <FileCode className="w-5 h-5 text-brand" />
-            </div>
+            <BrandMark className="w-9 h-9 rounded-lg group-hover:scale-105 transition-transform" />
             <div>
               <span className="font-extrabold text-base tracking-tight text-neutral-900 dark:text-neutral-100">
                 PRD <span className="text-brand-dark dark:text-brand">Maker</span>

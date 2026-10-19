@@ -1,3 +1,18 @@
+/**
+ * LLM service layer.
+ *
+ * Responsibilities:
+ * - Resolve which `LlmConfig` row to use and build an OpenAI-compatible client
+ *   from it (decrypt the stored key, with env-var fallback).
+ * - Implement the three AI features: clarification questions, streaming PRD
+ *   generation/revision, and diagram extraction from PRD text.
+ * - Detect provider-side quota exhaustion, persist a cooldown on the config so
+ *   the UI can hide that model, and surface a typed error.
+ *
+ * Every feature degrades gracefully: when no API key is available (local dev)
+ * or the model returns unusable JSON, deterministic mock/fallback data is used
+ * so the rest of the app keeps working.
+ */
 import OpenAI from "openai";
 import { prisma } from "../db";
 import { decryptApiKey } from "../utils/crypto";
@@ -8,8 +23,15 @@ import {
   ClarificationQuestionsSchema,
 } from "../schemas/diagram";
 
+// Cooldown used when the provider does not send a usable Retry-After header.
 const DEFAULT_QUOTA_COOLDOWN_MS = 15 * 60 * 1000;
 
+// ---------------------------------------------------------------------------
+// Quota exhaustion handling
+// ---------------------------------------------------------------------------
+
+// Loosely-typed provider error. SDK/transport errors expose different fields,
+// so every known location is optional and read defensively.
 type ProviderErrorShape = {
   status?: number;
   code?: string;
@@ -42,6 +64,10 @@ function isQuotaExhaustedError(error: unknown): boolean {
   );
 }
 
+/**
+ * Thrown when the chosen config is in cooldown, or when a call just exhausted
+ * its quota. The message is user-facing and states when the model returns.
+ */
 export class LlmQuotaExhaustedError extends Error {
   constructor(displayName: string, until: Date) {
     super(
@@ -53,6 +79,12 @@ export class LlmQuotaExhaustedError extends Error {
   }
 }
 
+/**
+ * Reads `Retry-After` (delay-seconds or HTTP-date) from the provider response
+ * and converts it to milliseconds, clamped to 5s..1h to avoid absurd
+ * cooldowns. Returns null when the header is missing or unparseable, so the
+ * caller falls back to DEFAULT_QUOTA_COOLDOWN_MS.
+ */
 function getRetryAfterMs(error: unknown): number | null {
   const headers = (error as ProviderErrorShape | undefined)?.headers;
   if (!headers) return null;
@@ -76,6 +108,12 @@ function getRetryAfterMs(error: unknown): number | null {
   return null;
 }
 
+/**
+ * If `error` is a quota error, records `unavailableUntil`/`unavailableReason`
+ * on the LlmConfig row so later calls fail fast and the model picker can hide
+ * it. Returns the cooldown end, or null when the error is unrelated.
+ * Persistence is best-effort: a DB failure must not mask the provider error.
+ */
 async function markQuotaExhausted(configId: string, error: unknown): Promise<Date | null> {
   if (!isQuotaExhaustedError(error)) return null;
 
@@ -95,6 +133,11 @@ async function markQuotaExhausted(configId: string, error: unknown): Promise<Dat
   return unavailableUntil;
 }
 
+/**
+ * Wraps a provider call (or stream iteration) so quota failures become
+ * LlmQuotaExhaustedError after the cooldown is persisted. Any other error
+ * propagates unchanged, so genuine bugs stay visible.
+ */
 async function withQuotaTracking<T>(
   config: { id: string; displayName: string },
   operation: () => Promise<T>
@@ -110,6 +153,23 @@ async function withQuotaTracking<T>(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Configuration & client resolution
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolves the config to use and builds the OpenAI-compatible client.
+ *
+ * Selection order: the explicit `llmConfigId` when given and found, otherwise
+ * the first active config that is not cooling down, otherwise the first active
+ * config, otherwise any config at all - so an admin left with only disabled
+ * rows still gets a clear error instead of a crash.
+ *
+ * The key comes from the encrypted DB column; if that is empty or fails to
+ * decrypt, GEMINI_API_KEY / DEEPSEEK_API_KEY from the environment is used.
+ * When no key exists, `client` is null and callers serve mock output.
+ * A config still in cooldown throws LlmQuotaExhaustedError.
+ */
 async function getLlmClient(llmConfigId?: string) {
   const now = new Date();
   let config = llmConfigId
@@ -166,6 +226,17 @@ async function getLlmClient(llmConfigId?: string) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Feature: clarification questions
+// ---------------------------------------------------------------------------
+
+/**
+ * Asks the model for 3-5 structured clarification questions about the raw
+ * product idea. The reply is expected to be bare JSON (markdown fences are
+ * stripped defensively) and is validated with ClarificationQuestionsSchema.
+ * On parse/validation failure, or when no API key is configured, a static set
+ * of questions is returned so the wizard can continue.
+ */
 export async function generateClarifications(
   initialPrompt: string,
   llmConfigId?: string
@@ -254,6 +325,21 @@ Balas HANYA dengan JSON valid dengan format:
   }
 }
 
+// ---------------------------------------------------------------------------
+// Feature: PRD generation & revision (streaming)
+// ---------------------------------------------------------------------------
+
+/**
+ * Generates the complete PRD as Markdown and calls `onChunk` per token so the
+ * HTTP layer can forward it over SSE; resolves with the full text.
+ *
+ * Clarifications are folded into the user prompt; when none were answered, the
+ * prompt says they were skipped.
+ *
+ * Quota tracking wraps both the initial request and the iteration over the
+ * stream, because providers can fail mid-stream (after `create` resolved).
+ * Without an API key, a canned PRD is streamed word-by-word as a dev stand-in.
+ */
 export async function streamPRDDocument(
   params: {
     initialPrompt: string;
@@ -366,6 +452,19 @@ Sertakan struktur berikut secara lengkap:
   return fullResponse;
 }
 
+// ---------------------------------------------------------------------------
+// Feature: diagram extraction from PRD text
+// ---------------------------------------------------------------------------
+
+/**
+ * Turns PRD text into the hierarchy epic -> feature -> subfeature that React
+ * Flow renders. Temperature is low because the output must be structural, not
+ * creative.
+ *
+ * The reply is expected as bare JSON (markdown fences stripped) and validated
+ * with DiagramDataSchema. Invalid output, or a missing API key, falls back to
+ * a small static graph so the canvas still shows something meaningful.
+ */
 export async function generateDiagramData(
   prdContent: string,
   llmConfigId?: string
@@ -459,6 +558,13 @@ Format balasan WAJIB murni JSON tanpa tanda kutip markdown \`\`\`json:
   }
 }
 
+/**
+ * Rewrites the whole PRD according to a free-text revision instruction,
+ * streaming the result through `onChunk` (same SSE contract as
+ * streamPRDDocument) and resolving with the complete revised Markdown.
+ * Without an API key, a revision note is appended to the current document
+ * instead, so the UI flow can still be exercised locally.
+ */
 export async function streamPRDRevision(
   params: {
     currentPrd: string;
