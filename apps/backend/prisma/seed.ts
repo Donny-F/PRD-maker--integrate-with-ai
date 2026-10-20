@@ -7,7 +7,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Starting database seeding...");
 
-  const adminEmail = process.env.ADMIN_SEED_EMAIL || "4kungm4il.15243@gmail.com";
+  const adminEmail = process.env.ADMIN_SEED_EMAIL;
+  if (!adminEmail) throw new Error("ADMIN_SEED_EMAIL must be set");
 
   // Upsert initial Admin user
   const adminUser = await prisma.user.upsert({

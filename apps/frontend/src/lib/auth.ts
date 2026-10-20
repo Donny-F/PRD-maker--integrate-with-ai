@@ -5,7 +5,7 @@ import GitHubProvider from "next-auth/providers/github";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET || "super-secret-auth-key-change-in-production-12345678",
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
   },

@@ -1,9 +1,7 @@
 services:
   postgres:
-    image: postgres:16-alpine
-    build:
-      dockerfile: Dockerfile
-    container_name: ${CONTAINER_NAME}
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    container_name: ${CONTAINER_NAME:-prd-maker-postgres}
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -13,7 +11,6 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init.d:/docker-entrypoint-initdb.d:ro
 
 volumes:
   postgres_data:

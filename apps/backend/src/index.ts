@@ -9,8 +9,8 @@ import { projectsRouter } from "./routes/projects";
 import { usersRouter } from "./routes/users";
 
 const app = express();
-const port = Number(process.env.PORT) || 5000;
-const origin = process.env.CORS_ORIGIN || "http://localhost:3000";
+const port = Number(process.env.PORT);
+const origin = process.env.CORS_ORIGIN || "";
 
 app.use(helmet());
 app.use(
@@ -33,10 +33,10 @@ app.use("/api/v1/projects", projectsRouter);
 app.use("/api/v1/users", usersRouter);
 
 // Global Error Handler
+// Log the full error server-side, but never expose internal details to clients.
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error("Unhandled error:", err);
-  const message = err instanceof Error ? err.message : "Internal Server Error";
-  res.status(500).json({ error: message });
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 app.listen(port, () => {
