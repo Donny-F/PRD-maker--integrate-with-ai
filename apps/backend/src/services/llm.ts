@@ -22,6 +22,7 @@ import {
   ClarificationQuestions,
   ClarificationQuestionsSchema,
 } from "../schemas/diagram";
+import { buildDefaultHeaders } from "./providerHeaders";
 
 // Cooldown used when the provider does not send a usable Retry-After header.
 const DEFAULT_QUOTA_COOLDOWN_MS = 15 * 60 * 1000;
@@ -169,8 +170,11 @@ async function withQuotaTracking<T>(
  * decrypt, GEMINI_API_KEY / DEEPSEEK_API_KEY from the environment is used.
  * When no key exists, `client` is null and callers serve mock output.
  * A config still in cooldown throws LlmQuotaExhaustedError.
+ *
+ * `sessionKey` identifies the conversation for providers that require stable
+ * per-conversation routing headers (OpenCode Go). It is ignored elsewhere.
  */
-async function getLlmClient(llmConfigId?: string) {
+async function getLlmClient(llmConfigId?: string, sessionKey?: string) {
   const now = new Date();
   let config = llmConfigId
     ? await prisma.llmConfig.findUnique({ where: { id: llmConfigId } })
@@ -221,6 +225,7 @@ async function getLlmClient(llmConfigId?: string) {
       ? new OpenAI({
           baseURL: config.baseUrl,
           apiKey,
+          defaultHeaders: buildDefaultHeaders(config, sessionKey),
         })
       : null,
   };
@@ -236,12 +241,17 @@ async function getLlmClient(llmConfigId?: string) {
  * stripped defensively) and is validated with ClarificationQuestionsSchema.
  * On parse/validation failure, or when no API key is configured, a static set
  * of questions is returned so the wizard can continue.
+ *
+ * `sessionKey` is the conversation identity used by providers that require
+ * stable routing headers; clarification calls have no project yet, so the
+ * caller passes whatever stable key it has (for example the user id).
  */
 export async function generateClarifications(
   initialPrompt: string,
-  llmConfigId?: string
+  llmConfigId?: string,
+  sessionKey?: string
 ): Promise<ClarificationQuestions> {
-  const { config, apiKey, client } = await getLlmClient(llmConfigId);
+  const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
   if (!client || !apiKey) {
     // Realistic fallback mock when API key is not configured yet in local dev
@@ -339,17 +349,21 @@ Balas HANYA dengan JSON valid dengan format:
  * Quota tracking wraps both the initial request and the iteration over the
  * stream, because providers can fail mid-stream (after `create` resolved).
  * Without an API key, a canned PRD is streamed word-by-word as a dev stand-in.
+ *
+ * `sessionKey` is the conversation identity (project id) required by
+ * providers such as OpenCode Go for routing affinity and prompt caching.
  */
 export async function streamPRDDocument(
   params: {
     initialPrompt: string;
     clarifications?: Array<{ question: string; answer: string }> | null;
     llmConfigId?: string;
+    sessionKey?: string;
   },
   onChunk: (chunk: string) => void
 ): Promise<string> {
-  const { initialPrompt, clarifications, llmConfigId } = params;
-  const { config, apiKey, client } = await getLlmClient(llmConfigId);
+  const { initialPrompt, clarifications, llmConfigId, sessionKey } = params;
+  const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
   const clarificationText =
     clarifications && clarifications.length > 0
@@ -464,12 +478,16 @@ Sertakan struktur berikut secara lengkap:
  * The reply is expected as bare JSON (markdown fences stripped) and validated
  * with DiagramDataSchema. Invalid output, or a missing API key, falls back to
  * a small static graph so the canvas still shows something meaningful.
+ *
+ * `sessionKey` is the conversation identity (project id) required by
+ * providers such as OpenCode Go for routing affinity and prompt caching.
  */
 export async function generateDiagramData(
   prdContent: string,
-  llmConfigId?: string
+  llmConfigId?: string,
+  sessionKey?: string
 ): Promise<DiagramData> {
-  const { config, apiKey, client } = await getLlmClient(llmConfigId);
+  const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
   const systemPrompt = `Anda adalah Software Architect & Visual System Designer.
 Tugas Anda: Ekstrak struktur hierarki fitur dari isi dokumen PRD berikut menjadi Nodes & Edges terstruktur untuk kanvas alur kiri-ke-kanan (LR).
@@ -564,17 +582,21 @@ Format balasan WAJIB murni JSON tanpa tanda kutip markdown \`\`\`json:
  * streamPRDDocument) and resolving with the complete revised Markdown.
  * Without an API key, a revision note is appended to the current document
  * instead, so the UI flow can still be exercised locally.
+ *
+ * `sessionKey` is the conversation identity (project id) required by
+ * providers such as OpenCode Go for routing affinity and prompt caching.
  */
 export async function streamPRDRevision(
   params: {
     currentPrd: string;
     revisionPrompt: string;
     llmConfigId?: string;
+    sessionKey?: string;
   },
   onChunk: (chunk: string) => void
 ): Promise<string> {
-  const { currentPrd, revisionPrompt, llmConfigId } = params;
-  const { config, apiKey, client } = await getLlmClient(llmConfigId);
+  const { currentPrd, revisionPrompt, llmConfigId, sessionKey } = params;
+  const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
   const prompt = `Berikut adalah dokumen PRD saat ini:\n\n${currentPrd}\n\nInstruksi Revisi dari Pengguna:\n"${revisionPrompt}"\n\nTerapkan perubahan yang diminta secara konsisten dan hasilkan dokumen PRD revisi yang utuh dalam format Markdown Bahasa Indonesia.`;
 

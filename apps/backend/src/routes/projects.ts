@@ -102,7 +102,11 @@ projectsRouter.post(
     }
 
     try {
-      const clarifications = await generateClarifications(initialPrompt.trim(), llmConfigId);
+      const clarifications = await generateClarifications(
+        initialPrompt.trim(),
+        llmConfigId,
+        `user:${req.user!.id}`
+      );
       res.json(clarifications);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to generate clarifications";
@@ -192,6 +196,7 @@ projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promi
         initialPrompt: project.initialPrompt,
         clarifications,
         llmConfigId,
+        sessionKey: `project:${project.id}`,
       },
       (chunk) => {
         accumulatedContent += chunk;
@@ -276,7 +281,11 @@ projectsRouter.post(
     }
 
     try {
-      const diagramData = await generateDiagramData(currentVersion.prdContent, llmConfigId);
+      const diagramData = await generateDiagramData(
+        currentVersion.prdContent,
+        llmConfigId,
+        `project:${project.id}`
+      );
 
       const updatedVersion = await prisma.projectVersion.update({
         where: { id: currentVersion.id },
@@ -358,6 +367,7 @@ projectsRouter.get("/:id/stream-revision", async (req: Request, res: Response): 
         currentPrd: currentVersion.prdContent,
         revisionPrompt,
         llmConfigId,
+        sessionKey: `project:${project.id}`,
       },
       (chunk) => {
         revisedPrd += chunk;
@@ -367,7 +377,11 @@ projectsRouter.get("/:id/stream-revision", async (req: Request, res: Response): 
 
     sendEvent("status", { message: "Menyinkronkan bagan diagram..." });
 
-    const newDiagram = await generateDiagramData(revisedPrd, llmConfigId);
+    const newDiagram = await generateDiagramData(
+      revisedPrd,
+      llmConfigId,
+      `project:${project.id}`
+    );
 
     const highestVersion = project.versions[0]?.versionNumber || 1;
     const nextVersionNumber = highestVersion + 1;
