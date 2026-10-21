@@ -39,6 +39,17 @@ function authenticateSseRequest(req: Request): AuthenticatedUser | null {
   }
 }
 
+// Reads the caller's IANA timezone from the `X-Timezone` header sent by the
+// web client. Returns undefined when absent or blank so the LLM service falls
+// back to Asia/Jakarta instead of receiving an empty zone.
+function getUserTimezone(req: Request): string | undefined {
+  const header = req.headers["x-timezone"];
+  const value = Array.isArray(header) ? header[0] : header;
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 // List all projects for current user
 projectsRouter.get("/", authMiddleware, async (req: Request, res: Response): Promise<void> => {
   const userId = req.user!.id;
@@ -103,7 +114,8 @@ projectsRouter.post(
       const clarifications = await generateClarifications(
         initialPrompt.trim(),
         llmConfigId,
-        `user:${req.user!.id}`
+        `user:${req.user!.id}`,
+        getUserTimezone(req)
       );
       res.json(clarifications);
     } catch (err: unknown) {
@@ -207,6 +219,7 @@ projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promi
         clarifications,
         llmConfigId,
         sessionKey: `project:${project.id}`,
+        userTimezone: getUserTimezone(req),
       },
       (chunk) => {
         accumulatedContent += chunk;
@@ -292,7 +305,8 @@ projectsRouter.post(
       const diagramData = await generateDiagramData(
         currentVersion.prdContent,
         llmConfigId,
-        `project:${project.id}`
+        `project:${project.id}`,
+        getUserTimezone(req)
       );
 
       const updatedVersion = await prisma.projectVersion.update({
@@ -376,6 +390,7 @@ projectsRouter.get("/:id/stream-revision", async (req: Request, res: Response): 
         revisionPrompt,
         llmConfigId,
         sessionKey: `project:${project.id}`,
+        userTimezone: getUserTimezone(req),
       },
       (chunk) => {
         revisedPrd += chunk;
@@ -388,7 +403,8 @@ projectsRouter.get("/:id/stream-revision", async (req: Request, res: Response): 
     const newDiagram = await generateDiagramData(
       revisedPrd,
       llmConfigId,
-      `project:${project.id}`
+      `project:${project.id}`,
+      getUserTimezone(req)
     );
 
     const highestVersion = project.versions[0]?.versionNumber || 1;

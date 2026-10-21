@@ -1,3 +1,5 @@
+import { applyTimezoneHeader } from "./timezone";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 export interface LlmModel {
@@ -106,6 +108,9 @@ export async function fetchWithAuth<T>(
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
   }
+  // Backend forwards this to the LLM so prompts can resolve relative dates
+  // against the user's own clock rather than the server's.
+  applyTimezoneHeader(headers);
 
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,

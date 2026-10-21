@@ -9,6 +9,8 @@
  * The parser handles event boundaries split across network chunks, CRLF line
  * endings, comment lines, and multi-line `data:` fields per the SSE spec.
  */
+import { applyTimezoneHeader } from "./timezone";
+
 export interface SseMessage {
   event: string;
   data: string;
@@ -23,6 +25,9 @@ export async function streamSse(
   if (!headers.has("Accept")) {
     headers.set("Accept", "text/event-stream");
   }
+  // Streaming endpoints feed the LLM directly, so the server needs the user's
+  // timezone to resolve relative dates in the generated document.
+  applyTimezoneHeader(headers);
 
   const response = await fetch(url, {
     ...init,

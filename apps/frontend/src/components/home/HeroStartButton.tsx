@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 export function HeroStartButton() {
   const { status } = useSession();
-  const href = status === "authenticated" ? "/projects" : "/login";
+  const href = status === "authenticated" ? "/projects/new" : "/login";
 
   return (
     <Link

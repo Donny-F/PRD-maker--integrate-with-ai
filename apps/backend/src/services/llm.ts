@@ -23,6 +23,7 @@ import {
   ClarificationQuestionsSchema,
 } from "../schemas/diagram";
 import { buildDefaultHeaders } from "./providerHeaders";
+import { formatUserCurrentTime } from "../utils/time";
 
 // Cooldown used when the provider does not send a usable Retry-After header.
 const DEFAULT_QUOTA_COOLDOWN_MS = 15 * 60 * 1000;
@@ -245,11 +246,16 @@ async function getLlmClient(llmConfigId?: string, sessionKey?: string) {
  * `sessionKey` is the conversation identity used by providers that require
  * stable routing headers; clarification calls have no project yet, so the
  * caller passes whatever stable key it has (for example the user id).
+ *
+ * `userTimezone` is the caller's IANA zone (from the `X-Timezone` header); it
+ * is rendered into the system prompt so relative dates resolve against the
+ * user's local clock. Missing or invalid values fall back to Asia/Jakarta.
  */
 export async function generateClarifications(
   initialPrompt: string,
   llmConfigId?: string,
-  sessionKey?: string
+  sessionKey?: string,
+  userTimezone?: string
 ): Promise<ClarificationQuestions> {
   const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
@@ -278,6 +284,8 @@ export async function generateClarifications(
 
   const prompt = `Pengguna ingin membuat produk dengan ide awal berikut:
 "${initialPrompt}"
+
+${formatUserCurrentTime(userTimezone)}
 
 Buat 3 sampai 5 pertanyaan klarifikasi terstruktur dalam Bahasa Indonesia untuk melengkapi detail kebutuhan fungsional dan teknis.
 Balas HANYA dengan JSON valid dengan format:
@@ -352,6 +360,10 @@ Balas HANYA dengan JSON valid dengan format:
  *
  * `sessionKey` is the conversation identity (project id) required by
  * providers such as OpenCode Go for routing affinity and prompt caching.
+ *
+ * `userTimezone` (IANA zone from the `X-Timezone` header) is injected into the
+ * system prompt so the generated PRD can reference the user's local date
+ * correctly. It is ignored by the no-key mock path, which emits static text.
  */
 export async function streamPRDDocument(
   params: {
@@ -359,10 +371,11 @@ export async function streamPRDDocument(
     clarifications?: Array<{ question: string; answer: string }> | null;
     llmConfigId?: string;
     sessionKey?: string;
+    userTimezone?: string;
   },
   onChunk: (chunk: string) => void
 ): Promise<string> {
-  const { initialPrompt, clarifications, llmConfigId, sessionKey } = params;
+  const { initialPrompt, clarifications, llmConfigId, sessionKey, userTimezone } = params;
   const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
   const clarificationText =
@@ -434,6 +447,7 @@ Tujuan utamanya adalah menyediakan solusi digital yang efisien, handal, dan muda
           role: "system",
           content: `Anda adalah Senior Product Manager profesional dan enterprise technical architect.
 Tugas Anda adalah membuat dokumen PRD (Product Requirements Document) yang sangat detail, terstruktur, dan siap pakai dalam format Markdown standar.
+${formatUserCurrentTime(userTimezone)}
 Gunakan Bahasa Indonesia formal (corporate style).
 Sertakan struktur berikut secara lengkap:
 # [Nama Proyek] - Product Requirements Document (PRD)
@@ -441,7 +455,7 @@ Sertakan struktur berikut secara lengkap:
 ## 2. Target Pengguna & Persona
 ## 3. Ruang Lingkup & Kebutuhan Fungsional (Fase 1: MVP, Fase 2: Lanjutan)
 ## 4. Kebutuhan Non-Fungsional (Keamanan, Performa, Skalabilitas)
-## 5. Arsitektur Teknis & Tech Stack
+## 5. Arsitektur Teknis & Tech Stack & full list dependency yang digunakan
 ## 6. Alur Pengguna (User Flow)
 ## 7. Metrik Keberhasilan (KPI)`,
         },
@@ -481,11 +495,16 @@ Sertakan struktur berikut secara lengkap:
  *
  * `sessionKey` is the conversation identity (project id) required by
  * providers such as OpenCode Go for routing affinity and prompt caching.
+ *
+ * `userTimezone` is accepted for symmetry with the other AI calls and is
+ * appended to the user message so phase wording ("Fase 1", target quarters)
+ * can be anchored to the user's local date.
  */
 export async function generateDiagramData(
   prdContent: string,
   llmConfigId?: string,
-  sessionKey?: string
+  sessionKey?: string,
+  userTimezone?: string
 ): Promise<DiagramData> {
   const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
@@ -548,7 +567,10 @@ Format balasan WAJIB murni JSON tanpa tanda kutip markdown \`\`\`json:
       model: config.modelIdentifier,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Berikut isi dokumen PRD:\n\n${prdContent}` },
+        {
+          role: "user",
+          content: `${formatUserCurrentTime(userTimezone)}\n\nBerikut isi dokumen PRD:\n\n${prdContent}`,
+        },
       ],
       temperature: 0.2,
     })
@@ -585,6 +607,10 @@ Format balasan WAJIB murni JSON tanpa tanda kutip markdown \`\`\`json:
  *
  * `sessionKey` is the conversation identity (project id) required by
  * providers such as OpenCode Go for routing affinity and prompt caching.
+ *
+ * `userTimezone` (IANA zone from the `X-Timezone` header) is injected into the
+ * user prompt so revisions that mention relative dates are applied against the
+ * user's local clock.
  */
 export async function streamPRDRevision(
   params: {
@@ -592,13 +618,14 @@ export async function streamPRDRevision(
     revisionPrompt: string;
     llmConfigId?: string;
     sessionKey?: string;
+    userTimezone?: string;
   },
   onChunk: (chunk: string) => void
 ): Promise<string> {
-  const { currentPrd, revisionPrompt, llmConfigId, sessionKey } = params;
+  const { currentPrd, revisionPrompt, llmConfigId, sessionKey, userTimezone } = params;
   const { config, apiKey, client } = await getLlmClient(llmConfigId, sessionKey);
 
-  const prompt = `Berikut adalah dokumen PRD saat ini:\n\n${currentPrd}\n\nInstruksi Revisi dari Pengguna:\n"${revisionPrompt}"\n\nTerapkan perubahan yang diminta secara konsisten dan hasilkan dokumen PRD revisi yang utuh dalam format Markdown Bahasa Indonesia.`;
+  const prompt = `Berikut adalah dokumen PRD saat ini:\n\n${currentPrd}\n\n${formatUserCurrentTime(userTimezone)}\n\nInstruksi Revisi dari Pengguna:\n"${revisionPrompt}"\n\nTerapkan perubahan yang diminta secara konsisten dan hasilkan dokumen PRD revisi yang utuh dalam format Markdown Bahasa Indonesia.`;
 
   if (!client || !apiKey) {
     const revised = `${currentPrd}\n\n### Catatan Revisi Terbaru\n- Disesuaikan berdasarkan instruksi: "${revisionPrompt}"\n- Detail modul dan persyaratan fungsional diperbarui.`;

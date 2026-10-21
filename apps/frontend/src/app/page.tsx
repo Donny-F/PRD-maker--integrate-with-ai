@@ -8,7 +8,7 @@ export default function HomePage() {
       {/* Badge */}
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/15 border border-brand/30 text-brand-dark dark:text-brand text-xs font-semibold mb-6">
         <Sparkles className="w-3.5 h-3.5" />
-        <span>PRD Generator & Visual Flow Architect MVP</span>
+        <span>PRD Generator & Visual Flow Architect</span>
       </div>
 
       {/* Main Hero Header */}
@@ -20,8 +20,8 @@ export default function HomePage() {
       </h1>
 
       <p className="mt-5 text-sm md:text-base text-neutral-600 dark:text-neutral-400 max-w-2xl leading-relaxed">
-        Manfaatkan kekuatan Antigravity Flash & DeepSeek untuk klarifikasi kebutuhan fungsional,
-        streaming markdown PRD instan, dan kalkulasi otomatis bagan diagram alur hirarki kiri-ke-kanan.
+        Manfaatkan Artificial Intelligence untuk membuat PRD & diagram alur otomatis.
+        pembuatan markdown PRD instan, dan kalkulasi otomatis bagan diagram alur hirarki dari kiri ke kanan.
       </p>
 
       {/* Hero CTA Buttons */}
@@ -42,7 +42,7 @@ export default function HomePage() {
             <Zap className="w-5 h-5" />
           </div>
           <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-1.5">
-            Streaming PRD Real-Time (SSE)
+            Streaming PRD Real-Time
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
             Tidak perlu menunggu response lama. Dokumen PRD terstruktur di-stream secara bertahap langsung ke markdown preview.
@@ -54,7 +54,7 @@ export default function HomePage() {
             <Layers className="w-5 h-5" />
           </div>
           <h3 className="text-sm font-bold text-neutral-900 dark:text-neutral-100 mb-1.5">
-            Diagram Alur Otomatis (Dagre + React Flow)
+            Diagram Alur Otomatis
           </h3>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
             Hirarki Epic, Fitur dengan indikator fase, dan Sub-fitur diatur secara otomatis dalam layout kiri-ke-kanan dan siap diunduh dalam format PNG.
