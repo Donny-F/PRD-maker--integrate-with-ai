@@ -7,7 +7,6 @@ import { api, AdminLlmConfig, AdminUser } from "@/lib/api";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { ConfirmTone } from "@/components/ui/ConfirmDialog";
 import {
-  ShieldAlert,
   Plus,
   KeyRound,
   Edit2,
@@ -355,13 +354,6 @@ export default function AdminPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-brand text-neutral-950">
-              <ShieldAlert className="w-3 h-3" />
-              Role: Super Admin
-            </span>
-            <span className="text-xs text-neutral-400 dark:text-neutral-500">Keamanan Enkripsi AES-256-GCM Aktif</span>
-          </div>
           <h1 className="text-xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
             Panel Manajemen LLM, Kunci API & Role Pengguna
           </h1>
