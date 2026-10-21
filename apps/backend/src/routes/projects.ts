@@ -13,16 +13,14 @@ import { Prisma, Role } from "@prisma/client";
 
 export const projectsRouter = Router();
 
-// Helper to authenticate SSE requests which may pass token via query parameter ?token=...
+// Helper to authenticate SSE requests through the standard Authorization
+// header. Query-string tokens are intentionally not supported: URLs end up in
+// access logs, proxy logs, and browser history, which would leak the JWT.
 function authenticateSseRequest(req: Request): AuthenticatedUser | null {
-  let token = "";
   const authHeader = req.headers.authorization;
-  if (authHeader?.startsWith("Bearer ")) {
-    token = authHeader.split(" ")[1];
-  } else if (typeof req.query.token === "string") {
-    token = req.query.token;
-  }
+  if (!authHeader?.startsWith("Bearer ")) return null;
 
+  const token = authHeader.slice("Bearer ".length).trim();
   if (!token) return null;
 
   const secret = process.env.AUTH_SECRET;
@@ -153,7 +151,8 @@ projectsRouter.get("/:id", authMiddleware, async (req: Request, res: Response): 
   });
 });
 
-// Step 3: Stream PRD via SSE
+// Step 3: Stream PRD via SSE. The first call persists v1; later calls
+// regenerate the document from the initial prompt and append a new version.
 projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promise<void> => {
   const user = authenticateSseRequest(req);
   if (!user) {
@@ -164,13 +163,24 @@ projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promi
   const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const llmConfigId = typeof req.query.llmConfigId === "string" ? req.query.llmConfigId : undefined;
 
-  const project = await prisma.project.findUnique({ where: { id } });
+  // The project keeps only the latest version number here: generation is
+  // append-only, so the streamed draft never overwrites an existing version.
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      versions: {
+        select: { versionNumber: true },
+        orderBy: { versionNumber: "desc" },
+        take: 1,
+      },
+    },
+  });
   if (!project) {
     res.status(404).json({ error: "Project not found" });
     return;
   }
 
-  if (project.userId !== user.id && user.role !== Role.ADMIN) {
+  if (project.userId !== user.id) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
@@ -204,23 +214,20 @@ projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promi
       }
     );
 
-    // Initial empty diagram structure until Step 4 is executed
+    // The first streamed draft becomes v1. Re-running the same endpoint
+    // (regeneration from the initial prompt and clarifications) appends the
+    // next version and tags it, preserving the linear revision history.
+    const latestVersionNumber = project.versions[0]?.versionNumber ?? 0;
+    const isRegeneration = latestVersionNumber > 0;
+
+    // Diagram starts empty until Step 4 runs (the client auto-triggers it).
     const initialDiagram = { nodes: [], edges: [] };
 
-    // Save as Version 1
-    const version = await prisma.projectVersion.upsert({
-      where: {
-        projectId_versionNumber: {
-          projectId: project.id,
-          versionNumber: 1,
-        },
-      },
-      update: {
-        prdContent: accumulatedContent,
-      },
-      create: {
+    const version = await prisma.projectVersion.create({
+      data: {
         projectId: project.id,
-        versionNumber: 1,
+        versionNumber: latestVersionNumber + 1,
+        revisionPrompt: isRegeneration ? "Regenerated from initial prompt" : null,
         prdContent: accumulatedContent,
         diagramData: initialDiagram,
       },
@@ -237,6 +244,7 @@ projectsRouter.get("/:id/stream-prd", async (req: Request, res: Response): Promi
       versionId: version.id,
       versionNumber: version.versionNumber,
       prdContent: accumulatedContent,
+      regenerated: isRegeneration,
     });
     res.end();
   } catch (err: unknown) {

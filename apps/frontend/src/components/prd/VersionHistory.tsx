@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { History, RotateCcw, Check, Sparkles } from "lucide-react";
+import { History, RotateCcw, RefreshCw, Check, Sparkles } from "lucide-react";
 import { ProjectVersion } from "@/lib/api";
 
 interface VersionHistoryProps {
@@ -51,6 +51,7 @@ export function VersionHistory({
         {versions.map((ver) => {
           const isActive = ver.id === currentVersionId;
           const isRollback = ver.revisionPrompt?.startsWith("Reverted from");
+          const isRegeneration = ver.revisionPrompt?.startsWith("Regenerated from");
 
           return (
             <div
@@ -77,6 +78,11 @@ export function VersionHistory({
                       <RotateCcw className="w-3 h-3" />
                       Rollback Snapshot
                     </span>
+                  ) : isRegeneration ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-sky-700 dark:text-sky-400 font-medium">
+                      <RefreshCw className="w-3 h-3" />
+                      Regenerate
+                    </span>
                   ) : ver.versionNumber === 1 ? (
                     <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Draft Awal</span>
                   ) : (
@@ -87,7 +93,7 @@ export function VersionHistory({
                   )}
                 </div>
 
-                {ver.revisionPrompt && (
+                {ver.revisionPrompt && !isRegeneration && (
                   <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-2 italic mb-1">
                     "{ver.revisionPrompt}"
                   </p>

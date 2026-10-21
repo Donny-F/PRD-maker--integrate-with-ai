@@ -3,18 +3,28 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Download, Copy, Check, FileText } from "lucide-react";
+import { Download, Copy, Check, FileText, RefreshCw } from "lucide-react";
 
 interface PrdViewerProps {
   content: string;
   projectTitle?: string;
   isStreaming?: boolean;
+  /**
+   * Rebuilds the PRD from the project's initial prompt and clarifications.
+   * The backend keeps the previous draft as history and stores the result as
+   * the next version, so this action is non-destructive.
+   */
+  onRegenerate?: () => void;
+  /** False while another AI operation (revision, diagram) must not be interrupted. */
+  canRegenerate?: boolean;
 }
 
 export function PrdViewer({
   content,
   projectTitle = "project-prd",
   isStreaming = false,
+  onRegenerate,
+  canRegenerate = true,
 }: PrdViewerProps) {
   const [copied, setCopied] = useState(false);
 
@@ -42,7 +52,7 @@ export function PrdViewer({
   return (
     <div className="flex flex-col h-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden shadow-sm">
       {/* Top Header & Actions Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-neutral-50/90 dark:bg-neutral-900/90 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-neutral-50/90 dark:bg-neutral-900/90 border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-brand-dark dark:text-brand" />
           <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">Dokumen PRD (Markdown)</span>
@@ -55,6 +65,18 @@ export function PrdViewer({
         </div>
 
         <div className="flex items-center gap-2">
+          {onRegenerate && (
+            <button
+              onClick={onRegenerate}
+              disabled={isStreaming || !canRegenerate}
+              title="Generate ulang dokumen PRD dari prompt awal dan jawaban klarifikasi"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-brand-dark dark:text-brand border border-brand/40 hover:bg-brand/10 rounded-md transition disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isStreaming ? "animate-spin" : ""}`} />
+              <span>{isStreaming ? "Memproses..." : content ? "Regenerate" : "Generate"}</span>
+            </button>
+          )}
+
           <button
             onClick={handleCopy}
             disabled={!content}
@@ -80,8 +102,30 @@ export function PrdViewer({
         {content ? (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         ) : (
-          <div className="py-12 text-center text-xs text-neutral-400 dark:text-neutral-500">
-            Dokumen PRD belum dibuat. Mulai dari Step 1 untuk mengalirkan dokumen.
+          <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-brand/10 text-brand-dark dark:text-brand">
+              <FileText className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">
+                {isStreaming ? "Menyusun Dokumen PRD" : "Dokumen PRD Belum Dibuat"}
+              </h4>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm">
+                {isStreaming
+                  ? "AI sedang menyusun dokumen PRD dari prompt awal dan jawaban klarifikasi proyek ini."
+                  : "Dokumen PRD dapat digenerate langsung dari prompt awal dan jawaban klarifikasi proyek ini."}
+              </p>
+            </div>
+            {onRegenerate && (
+              <button
+                onClick={onRegenerate}
+                disabled={isStreaming || !canRegenerate}
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-neutral-950 bg-brand hover:bg-brand-hover rounded-lg shadow-sm transition disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isStreaming ? "animate-spin" : ""}`} />
+                <span>{isStreaming ? "Memproses..." : "Generate PRD Sekarang"}</span>
+              </button>
+            )}
           </div>
         )}
       </div>
