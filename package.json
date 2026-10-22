@@ -2,6 +2,7 @@
   "name": "prd-maker",
   "private": true,
   "scripts": {
+    "prepare": "npx skills-lock install",
     "dev": "turbo dev",
     "dev:frontend": "turbo dev --filter=frontend",
     "dev:backend": "turbo dev --filter=backend",
