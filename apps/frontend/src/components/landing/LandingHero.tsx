@@ -15,10 +15,36 @@ import { PromptPreview } from "./PromptPreview";
 type ShowcaseKey = "prompt" | "prd" | "diagram";
 
 const SHOWCASE: ReadonlyArray<{ key: ShowcaseKey; label: string }> = [
-  { key: "prompt", label: "Prompt" },
   { key: "prd", label: "PRD" },
+  { key: "prompt", label: "Prompt" },
   { key: "diagram", label: "Diagram" },
 ];
+
+/**
+ * The dashed arrow drawn in the gutter beside the prompt card.
+ *
+ * One path serves both directions: the right-hand copy is the same svg mirrored
+ * by `.landing-link--right`, so the two arrows cannot fall out of sync. The
+ * head sits at the left of the viewBox (x 4–8.5), i.e. the direction of travel.
+ * Positioning lives in `landing.css` because it is relative to the grid gutter,
+ * not to the card's content.
+ */
+function FlowArrow({ side }: { side: "left" | "right" }) {
+  return (
+    <span className={`landing-link landing-link--${side}`} aria-hidden>
+      <svg viewBox="0 0 28 10" fill="none">
+        <path d="M27 5H7" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
+        <path
+          d="M8.5 1 4 5l4.5 4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
+  );
+}
 
 /**
  * First screen of the landing page.
@@ -53,7 +79,7 @@ export function LandingHero() {
   return (
     <section className="landing-hero" aria-labelledby="landing-title">
       <h1 id="landing-title" className="landing-title">
-        Prompt. PRD. Diagram.
+        Prompt {">"} PRD {">"}Diagram
       </h1>
       <p className="landing-sub">
         Satu prompt sudah cukup untuk menghasilkan PRD yang siap direview, lengkap
@@ -81,7 +107,9 @@ export function LandingHero() {
 
       <div className="landing-previews items-center">
         <div className="landing-preview landing-preview--prompt" {...previewState("prompt")}>
+          <FlowArrow side="left" />
           <PromptPreview />
+          <FlowArrow side="right" />
         </div>
         <div className="landing-preview landing-preview--prd" {...previewState("prd")}>
           <PrdPreview />

@@ -5,7 +5,7 @@ import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "PRD Maker — Prompt. PRD. Diagram.",
+  title: "PRD Maker — Prompt, PRD, Diagram",
   description:
     "Satu prompt menghasilkan PRD siap review dan diagram alur otomatis. Klarifikasi AI, PRD ter-stream, dan riwayat versi dalam satu proyek.",
 };

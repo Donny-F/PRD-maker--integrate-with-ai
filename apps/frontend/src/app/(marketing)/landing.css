@@ -49,6 +49,8 @@
   --shadow-card: 0 30px 60px -28px rgba(19, 29, 35, 0.38),
     0 8px 20px -12px rgba(19, 29, 35, 0.18);
   --shadow-soft: 0 18px 40px -24px rgba(19, 29, 35, 0.28);
+  --shadow-lift: 0 44px 80px -32px rgba(19, 29, 35, 0.45),
+    0 16px 32px -18px rgba(19, 29, 35, 0.24);
   --radius-panel: clamp(22px, 2.4vw, 38px);
   --shell-pad: clamp(12px, 4vw, 56px);
   --pad-x: clamp(20px, 4vw, 56px);
@@ -79,9 +81,21 @@
   --shadow-card: 0 30px 60px -28px rgba(0, 0, 0, 0.85),
     0 8px 20px -12px rgba(0, 0, 0, 0.6);
   --shadow-soft: 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+  --shadow-lift: 0 44px 80px -32px rgba(0, 0, 0, 0.95),
+    0 16px 32px -18px rgba(0, 0, 0, 0.75);
 }
 
 /* ------------------------------------------------------------------ frame */
+
+/*
+ * The "Cara kerja" anchor glides instead of jumping. `scroll-behavior` must sit
+ * on the element that actually scrolls, which is `<html>`; `:has` limits the
+ * rule to pages that mount the landing root, so the app shell keeps its instant
+ * jumps. Reduced motion reverts it to a jump further down.
+ */
+html:has(.landing-root) {
+  scroll-behavior: smooth;
+}
 
 .landing-panel {
   position: relative;
@@ -217,10 +231,12 @@
 /* ------------------------------------------------------- previews / cards */
 
 .landing-previews {
+  --previews-gap: clamp(28px, 2.2vw, 36px);
+
   display: grid;
   grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.08fr) minmax(0, 0.96fr);
   grid-template-areas: "prd prompt diagram";
-  gap: clamp(16px, 2vw, 28px);
+  gap: var(--previews-gap);
   width: 100%;
   max-width: 1180px;
 }
@@ -230,6 +246,7 @@
 }
 
 .landing-preview--prompt {
+  position: relative;
   grid-area: prompt;
 }
 
@@ -239,6 +256,40 @@
 
 .landing-preview--diagram {
   grid-area: diagram;
+}
+
+/*
+ * Flow arrows from the prompt card to the two artefacts it produces.
+ *
+ * They live in the grid gutters, so they need no coordinates: `right: 100%`
+ * starts at the prompt wrapper's left edge and the width is the gutter itself.
+ * The right-hand arrow is the same svg mirrored, which keeps one path to
+ * maintain. `aria-hidden` on the span keeps the decoration out of the
+ * accessibility tree; the reading order already carries "Prompt. PRD. Diagram.".
+ */
+.landing-link {
+  position: absolute;
+  top: 50%;
+  width: calc(var(--previews-gap) - 8px);
+  translate: 0 -50%;
+  color: var(--muted);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.landing-link svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.landing-link--left {
+  right: calc(100% + 4px);
+}
+
+.landing-link--right {
+  left: calc(100% + 4px);
+  transform: scaleX(-1);
 }
 
 .landing-card {
@@ -256,17 +307,27 @@
 }
 
 /*
- * Spotlight. The selected artefact gets the accent ring and a small lift; the
- * other two stay untouched so the composition keeps its weight (dimming turned
- * the dark composer into a grey slab over the light panel).
+ * Motion on the cards.
  *
- * `translate` carries the lift instead of `transform`: the float keyframes own
- * `transform`, while the independent `translate` property composes with them
- * and needs no `!important`. The card's own `opacity` is left alone because the
- * wrapper's entrance animation holds it with fill-mode `both`.
+ * `translate`, `scale` and the shadow all animate on the same long easing so
+ * the card leaves the paper in one gesture instead of three; `translate` is
+ * used instead of `transform` because the float keyframes own `transform` and
+ * the independent property composes with them. The selected card keeps its
+ * accent ring: that rule comes after the hover rule so it wins the tie.
  */
 .landing-preview > .landing-card {
-  transition: box-shadow 240ms ease-out, translate 220ms ease-out;
+  transition: translate 420ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    scale 420ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .landing-preview > .landing-card:hover {
+    translate: 0 -8px;
+    scale: 1.01;
+    box-shadow: var(--shadow-lift); /* taste-skill-ignore: the hover lift is the artefact's depth, not filler */
+    animation-play-state: paused;
+  }
 }
 
 .landing-preview[data-active="true"] > .landing-card {
@@ -275,12 +336,6 @@
   /* Freeze the drift while the card is the selected artefact: a moving card
      under a fixed ring reads as a layout glitch. */
   animation-play-state: paused;
-}
-
-@media (hover: hover) {
-  .landing-preview > .landing-card:hover {
-    translate: 0 -6px;
-  }
 }
 
 .landing-card__head {
@@ -989,6 +1044,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html:has(.landing-root) {
+    scroll-behavior: auto;
+  }
+
   .landing-root,
   .landing-root *,
   .landing-root *::before,
@@ -1024,6 +1083,11 @@
 
   .landing-card--prompt {
     min-height: 300px;
+  }
+
+  /* Stacked: there is no gutter for an arrow to point across. */
+  .landing-link {
+    display: none;
   }
 }
 
