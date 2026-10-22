@@ -1,0 +1,1462 @@
+{
+ "url": "http://localhost:3000",
+ "at": "2026-10-22T14:57:59.526Z",
+ "allow": [
+  "still-page",
+  "few-pictures"
+ ],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 3,
+   "filled": [
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 2098,
+     "screens": 2.3,
+     "words": 303,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 12,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 3,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 3,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Prompt. PRD. Diagram.",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 100,
+     "vw": 6.9,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.045,
+     "leading": 0.95,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.69,
+     "top": 186,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Prompt. PRD. Diagram.",
+     "words": 3,
+     "lines": 1,
+     "size": 100,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Prompt. PRD. Diagram.",
+      "words": 3,
+      "chars": 21,
+      "lines": 1,
+      "size": 100,
+      "vw": 6.9,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.69,
+      "top": 186,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Dari satu paragraf ke dokumen kerja.",
+      "words": 6,
+      "chars": 36,
+      "lines": 2,
+      "size": 45.6,
+      "vw": 3.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.34,
+      "top": 1050,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Mulai dari satu prompt.",
+      "words": 4,
+      "chars": 23,
+      "lines": 1,
+      "size": 56,
+      "vw": 3.9,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.46,
+      "top": 1826,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": 6,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      24,
+      46,
+      56,
+      100
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 16,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 14
+     },
+     "measureChars": 53,
+     "max": {
+      "size": 100,
+      "vw": 6.9,
+      "font": "Inter",
+      "text": "Prompt. PRD. Diagram."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.08,
+     "smallText": 3
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#0a0a0a",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#060708",
+       "top": 0,
+       "hsl": {
+        "h": 210,
+        "s": 0.14,
+        "l": 0.03
+       }
+      },
+      {
+       "color": "#0e1113",
+       "top": 56,
+       "hsl": {
+        "h": 204,
+        "s": 0.15,
+        "l": 0.06
+       }
+      },
+      {
+       "color": "#0a0d0f",
+       "top": 1706,
+       "hsl": {
+        "h": 204,
+        "s": 0.2,
+        "l": 0.05
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#d3d8db",
+       "share": 0.39
+      },
+      {
+       "color": "#9ba5ab",
+       "share": 0.24
+      },
+      {
+       "color": "#f2f4f5",
+       "share": 0.14
+      },
+      {
+       "color": "#f4f6f7",
+       "share": 0.11
+      },
+      {
+       "color": "#9aa5ab",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#ffc200",
+      "hsl": {
+       "h": 46,
+       "s": 1,
+       "l": 0.5
+      },
+      "fg": "#1a1500"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 2,
+     "radius": "pill",
+     "height": 33,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Masuk",
+      "Buat PRD"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 3,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 1,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 5,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [
+     {
+      "type": "svg",
+      "ratio": 0.08
+     }
+    ],
+    "nav": {
+     "links": 3,
+     "fixed": false,
+     "height": 52,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "inter fallback"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 2098,
+    "margins": {
+     "left": 130,
+     "right": 130
+    },
+    "sections": [
+     {
+      "sel": "div.landing-shell",
+      "tag": "div",
+      "top": 0,
+      "height": 900,
+      "words": 172,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Prompt. PRD. Diagram.",
+       "size": 100,
+       "tag": "h1"
+      },
+      "left": 148,
+      "right": 130,
+      "textLeft": 148,
+      "textRight": 151,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#cara-kerja.landing-how",
+      "tag": "section",
+      "top": 900,
+      "height": 806,
+      "words": 124,
+      "media": 0,
+      "middle": 147,
+      "heading": {
+       "text": "Dari satu paragraf ke dokumen kerja.",
+       "size": 46,
+       "tag": "h2"
+      },
+      "left": 130,
+      "right": 227,
+      "textLeft": 130,
+      "textRight": 227,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.landing-footer",
+      "tag": "footer",
+      "top": 1706,
+      "height": 392,
+      "words": 37,
+      "media": 0,
+      "middle": 148,
+      "heading": {
+       "text": "Mulai dari satu prompt.",
+       "size": 56,
+       "tag": "h2"
+      },
+      "left": 130,
+      "right": 130,
+      "textLeft": 130,
+      "textRight": 130,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Prompt. PRD. Diagram.",
+      "size": 100,
+      "top": 186,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 130,
+      "n": 2
+     },
+     {
+      "x": 150,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 12,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.09,
+    "voidBox": {
+     "x": 480,
+     "y": 780,
+     "w": 960,
+     "h": 120
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 3,
+   "filled": [
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 2837,
+     "screens": 2.8,
+     "words": 303,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 12,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 3,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 3,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Prompt. PRD. Diagram.",
+     "words": 3,
+     "chars": 21,
+     "lines": 1,
+     "size": 53.8,
+     "vw": 7,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.045,
+     "leading": 0.95,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.7,
+     "top": 144,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Prompt. PRD. Diagram.",
+     "words": 3,
+     "lines": 1,
+     "size": 53.8,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Prompt. PRD. Diagram.",
+      "words": 3,
+      "chars": 21,
+      "lines": 1,
+      "size": 53.8,
+      "vw": 7,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.7,
+      "top": 144,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Dari satu paragraf ke dokumen kerja.",
+      "words": 6,
+      "chars": 36,
+      "lines": 1,
+      "size": 30.4,
+      "vw": 4,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 1545,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Mulai dari satu prompt.",
+      "words": 4,
+      "chars": 23,
+      "lines": 1,
+      "size": 34.6,
+      "vw": 4.5,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.47,
+      "top": 2590,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 3,
+     "maxLines": 1,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": 6,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      24,
+      30,
+      35,
+      54
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 16,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 14
+     },
+     "measureChars": 53,
+     "max": {
+      "size": 53.8,
+      "vw": 7,
+      "font": "Inter",
+      "text": "Prompt. PRD. Diagram."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.08,
+     "smallText": 3
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#0a0a0a",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#060708",
+       "top": 0,
+       "hsl": {
+        "h": 210,
+        "s": 0.14,
+        "l": 0.03
+       }
+      },
+      {
+       "color": "#0e1113",
+       "top": 31,
+       "hsl": {
+        "h": 204,
+        "s": 0.15,
+        "l": 0.06
+       }
+      },
+      {
+       "color": "#0a0d0f",
+       "top": 2514,
+       "hsl": {
+        "h": 204,
+        "s": 0.2,
+        "l": 0.05
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#d3d8db",
+       "share": 0.39
+      },
+      {
+       "color": "#9ba5ab",
+       "share": 0.24
+      },
+      {
+       "color": "#f2f4f5",
+       "share": 0.14
+      },
+      {
+       "color": "#f4f6f7",
+       "share": 0.11
+      },
+      {
+       "color": "#9aa5ab",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#ffc200",
+      "hsl": {
+       "h": 46,
+       "s": 1,
+       "l": 0.5
+      },
+      "fg": "#1a1500"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 2,
+     "radius": "pill",
+     "height": 33,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Masuk",
+      "Buat PRD"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 3,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 1,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 5,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 3,
+     "fixed": false,
+     "height": 52,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "inter fallback"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 2837,
+    "margins": {
+     "left": 61,
+     "right": 83
+    },
+    "sections": [
+     {
+      "sel": "div.landing-shell",
+      "tag": "div",
+      "top": 0,
+      "height": 1453,
+      "words": 172,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Prompt. PRD. Diagram.",
+       "size": 54,
+       "tag": "h1"
+      },
+      "left": 83,
+      "right": 83,
+      "textLeft": 83,
+      "textRight": 83,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#cara-kerja.landing-how",
+      "tag": "section",
+      "top": 1453,
+      "height": 1061,
+      "words": 124,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Dari satu paragraf ke dokumen kerja.",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 61,
+      "right": 97,
+      "textLeft": 61,
+      "textRight": 97,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.landing-footer",
+      "tag": "footer",
+      "top": 2514,
+      "height": 323,
+      "words": 37,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Mulai dari satu prompt.",
+       "size": 35,
+       "tag": "h2"
+      },
+      "left": 61,
+      "right": 61,
+      "textLeft": 61,
+      "textRight": 61,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Prompt. PRD. Diagram.",
+      "size": 54,
+      "top": 144,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 61,
+      "n": 2
+     },
+     {
+      "x": 81,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 12,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 4,
+   "filled": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 0,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 0,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 3245,
+     "screens": 3.8,
+     "words": 301,
+     "img": 0,
+     "video": 0,
+     "canvas": 0,
+     "svg": 12,
+     "sections": 2,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 3,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 3,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Prompt. PRD. Diagram.",
+     "words": 3,
+     "chars": 21,
+     "lines": 2,
+     "size": 40,
+     "vw": 10.3,
+     "font": "Inter",
+     "weight": 600,
+     "tracking": -0.045,
+     "leading": 0.95,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.82,
+     "top": 118,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Prompt. PRD. Diagram.",
+     "words": 3,
+     "lines": 2,
+     "size": 40,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Prompt. PRD. Diagram.",
+      "words": 3,
+      "chars": 21,
+      "lines": 2,
+      "size": 40,
+      "vw": 10.3,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 118,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Dari satu paragraf ke dokumen kerja.",
+      "words": 6,
+      "chars": 36,
+      "lines": 2,
+      "size": 30.4,
+      "vw": 7.8,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1.05,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 1600,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Tulis idenya",
+      "words": 2,
+      "chars": 12,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 2058,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Jawab klarifikasi",
+      "words": 2,
+      "chars": 17,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 2288,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Review PRD & diagram",
+      "words": 4,
+      "chars": 20,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.02,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 2517,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Mulai dari satu prompt.",
+      "words": 4,
+      "chars": 23,
+      "lines": 2,
+      "size": 32,
+      "vw": 8.2,
+      "font": "Inter",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1.02,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.82,
+      "top": 2827,
+      "tag": "h2",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 6,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 1,
+     "medianWords": 4,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      24,
+      30,
+      32,
+      40
+     ],
+     "sizeCount": 12,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 16,
+      "leading": 1.6,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 14
+     },
+     "measureChars": 38,
+     "max": {
+      "size": 40,
+      "vw": 10.3,
+      "font": "Inter",
+      "text": "Prompt. PRD. Diagram."
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.08,
+     "smallText": 3
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#0a0a0a",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 0.04
+     },
+     "dark": true,
+     "sectionBgs": [
+      {
+       "color": "#060708",
+       "top": 0,
+       "hsl": {
+        "h": 210,
+        "s": 0.14,
+        "l": 0.03
+       }
+      },
+      {
+       "color": "#0e1113",
+       "top": 16,
+       "hsl": {
+        "h": 204,
+        "s": 0.15,
+        "l": 0.06
+       }
+      },
+      {
+       "color": "#1b2024",
+       "top": 356,
+       "hsl": {
+        "h": 207,
+        "s": 0.14,
+        "l": 0.12
+       }
+      },
+      {
+       "color": "#161a1d",
+       "top": 723,
+       "hsl": {
+        "h": 206,
+        "s": 0.14,
+        "l": 0.1
+       }
+      },
+      {
+       "color": "#0a0d0f",
+       "top": 2763,
+       "hsl": {
+        "h": 204,
+        "s": 0.2,
+        "l": 0.05
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#d3d8db",
+       "share": 0.39
+      },
+      {
+       "color": "#9ba5ab",
+       "share": 0.24
+      },
+      {
+       "color": "#f2f4f5",
+       "share": 0.14
+      },
+      {
+       "color": "#f4f6f7",
+       "share": 0.11
+      },
+      {
+       "color": "#9aa5ab",
+       "share": 0.06
+      }
+     ],
+     "button": {
+      "bg": "#ffc200",
+      "hsl": {
+       "h": 46,
+       "s": 1,
+       "l": 0.5
+      },
+      "fg": "#1a1500"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 2,
+     "radius": "pill",
+     "height": 33,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Masuk",
+      "Buat PRD"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 3,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 1,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 6,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": false,
+     "height": 52,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "inter fallback"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 3245,
+    "margins": {
+     "left": 36,
+     "right": 39
+    },
+    "sections": [
+     {
+      "sel": "div.landing-shell",
+      "tag": "div",
+      "top": 0,
+      "height": 1520,
+      "words": 170,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Prompt. PRD. Diagram.",
+       "size": 40,
+       "tag": "h1"
+      },
+      "left": 36,
+      "right": 36,
+      "textLeft": 49,
+      "textRight": 49,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section#cara-kerja.landing-how",
+      "tag": "section",
+      "top": 1520,
+      "height": 1243,
+      "words": 124,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Dari satu paragraf ke dokumen kerja.",
+       "size": 30,
+       "tag": "h2"
+      },
+      "left": 36,
+      "right": 39,
+      "textLeft": 36,
+      "textRight": 39,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "footer.landing-footer",
+      "tag": "footer",
+      "top": 2763,
+      "height": 482,
+      "words": 37,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Mulai dari satu prompt.",
+       "size": 32,
+       "tag": "h2"
+      },
+      "left": 36,
+      "right": 45,
+      "textLeft": 36,
+      "textRight": 45,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Prompt. PRD. Diagram.",
+      "size": 40,
+      "top": 118,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 36,
+      "n": 2
+     },
+     {
+      "x": 56,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 3,
+    "bodySize": 12,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "size-count",
+   "width": 1440,
+   "message": "12 different font sizes (12, 13, 14, 15, 16, 17, 18, 19, 24, 46, 56, 100).",
+   "fix": "A page needs about five: display, heading, lead, body, small.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "WARN",
+   "id": "small-text",
+   "width": 1440,
+   "message": "3 text block(s) under 13px.",
+   "fix": "Nothing meant to be read goes below 13px.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "off-centre",
+   "width": 768,
+   "message": "The margins differ: 61px on the left, 83px on the right, at 768px.",
+   "fix": "Put the navigation and the content on one pair of margins; check for padding on one side only, a scrollbar gutter, or a header on another inset than the page."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "D:\\Donny\\Programming\\PRD-maker\\v0.1\\.taste-skill\\after\\desktop-fold.jpg",
+   "pages": [
+    "D:\\Donny\\Programming\\PRD-maker\\v0.1\\.taste-skill\\after\\desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "D:\\Donny\\Programming\\PRD-maker\\v0.1\\.taste-skill\\after\\tablet-fold.jpg",
+   "pages": [
+    "D:\\Donny\\Programming\\PRD-maker\\v0.1\\.taste-skill\\after\\tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "D:\\Donny\\Programming\\PRD-maker\\v0.1\\.taste-skill\\after\\mobile-fold.jpg",
+   "pages": [
+    "D:\\Donny\\Programming\\PRD-maker\\v0.1\\.taste-skill\\after\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}
