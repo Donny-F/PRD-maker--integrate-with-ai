@@ -14,14 +14,6 @@
 
 ▶️ **[Watch the PRD Maker demo on YouTube](https://www.youtube.com/watch?v=VIDEO_ID)**
 
-<!--
-GitHub strips <iframe> embeds from README files. Once the video is published,
-replace VIDEO_ID in the link above with the real YouTube video ID. For a
-clickable thumbnail instead, replace the link with:
-
-[![Watch the PRD Maker demo](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
--->
-
 ## Overview
 
 PRD Maker turns a rough product idea into a reviewable Product Requirements Document and a visual architecture diagram. It asks targeted clarification questions, streams the PRD as it is written, lays out the diagram automatically, and keeps every iteration in a linear version history.
@@ -103,13 +95,11 @@ Without an API key, the backend streams deterministic sample content so the UI c
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/prd-maker.git
+git clone https://github.com/Donny-F/PRD-maker--integrate-with-ai.git
 cd prd-maker
 corepack enable
 pnpm install
 ```
-
-Replace `your-username` after creating the GitHub repository.
 
 ### 2. Create the environment files
 
