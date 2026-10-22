@@ -96,7 +96,7 @@ Without an API key, the backend streams deterministic sample content so the UI c
 
 ```bash
 git clone https://github.com/Donny-F/PRD-maker--integrate-with-ai.git
-cd prd-maker
+cd PRD-maker--integrate-with-ai
 corepack enable
 pnpm install
 ```
