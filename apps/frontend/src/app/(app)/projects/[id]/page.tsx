@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useCallback, use } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { api, LlmModel, Project, ProjectVersion, DiagramData } from "@/lib/api";
 import { streamSse } from "@/lib/sse";
 import { LlmModelSelect } from "@/components/ui/LlmModelSelect";
@@ -17,6 +18,7 @@ import {
   Send,
   Loader2,
   AlertCircle,
+  ArrowLeft,
   GitBranch,
 } from "lucide-react";
 
@@ -361,18 +363,25 @@ export default function ProjectDetailPage({
 
   if (status === "loading" || isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-dark dark:text-brand" />
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">Memuat data proyek...</span>
+      <div className="app-loading" style={{ minHeight: "60vh" }}>
+        <Loader2 className="animate-spin" />
+        <span>Memuat ruang kerja proyek...</span>
       </div>
     );
   }
 
   if (!project) {
     return (
-      <div className="p-8 text-center bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl">
-        <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-2" />
-        <h3 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">Proyek Tidak Ditemukan</h3>
+      <div className="empty-panel">
+        <AlertCircle style={{ width: 22, height: 22, color: "var(--app-danger)" }} />
+        <h2 className="empty-panel__title">Proyek tidak ditemukan.</h2>
+        <p className="empty-panel__text">
+          Dokumen ini mungkin sudah dihapus atau tidak lagi tersedia untuk akun
+          Anda.
+        </p>
+        <Link href="/projects" className="btn btn--primary">
+          Kembali ke proyek
+        </Link>
       </div>
     );
   }
@@ -381,95 +390,98 @@ export default function ProjectDetailPage({
   const currentDiagram = (activeVersion?.diagramData as DiagramData) || { nodes: [], edges: [] };
 
   return (
-    <div className="space-y-6">
-      {/* Project Header Bar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-neutral-900 text-brand">
-              <GitBranch className="w-3 h-3 text-brand" />
-              v{activeVersion?.versionNumber || 1} Aktif
+    <div>
+      <Link href="/projects" className="app-back">
+        <ArrowLeft />
+        <span>Semua proyek</span>
+      </Link>
+
+      <div className="workspace-head">
+        <div className="workspace-head__copy">
+          <div className="app-meta" style={{ marginBottom: 9 }}>
+            <span className="chip chip--accent">
+              <GitBranch />
+              v{activeVersion?.versionNumber || 1} aktif
             </span>
-            <span className="text-xs text-neutral-400 dark:text-neutral-500">
-              Dibuat: {new Date(project.createdAt).toLocaleDateString("id-ID")}
+            <span>
+              Dibuat{" "}
+              {new Date(project.createdAt).toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </span>
           </div>
-          <h1 className="text-xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
-            {project.title}
-          </h1>
+          <h1 className="workspace-head__title">{project.title}</h1>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
-          {/* Model dropdown applies to PRD, diagram, and revision calls below */}
-          <LlmModelSelect
-            models={models}
-            value={selectedModelId}
-            onChange={handleModelChange}
-            isLoading={isLoadingModels}
-            disabled={isStreamingPrd || isRevising || isGeneratingDiagram}
-            label={null}
-            className="sm:w-[280px]"
-          />
+        <div className="workspace-head__controls">
+          <div style={{ width: 280, maxWidth: "100%" }}>
+            <LlmModelSelect
+              models={models}
+              value={selectedModelId}
+              onChange={handleModelChange}
+              isLoading={isLoadingModels}
+              disabled={isStreamingPrd || isRevising || isGeneratingDiagram}
+              label={null}
+            />
+          </div>
 
-          {/* View Mode Switcher */}
-          <div className="flex items-center p-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-800">
+          <div className="segmented" role="group" aria-label="Mode tampilan workspace">
             <button
+              type="button"
               onClick={() => setViewMode("both")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                viewMode === "both"
-                  ? "bg-white dark:bg-neutral-900 text-neutral-950 dark:text-neutral-50 shadow-sm"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-              }`}
+              className="segmented__item"
+              data-active={viewMode === "both" ? "true" : "false"}
+              aria-pressed={viewMode === "both"}
             >
-              <Columns2 className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Bersisian</span>
+              <Columns2 />
+              <span>Bersisian</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("prd")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                viewMode === "prd"
-                  ? "bg-white dark:bg-neutral-900 text-neutral-950 dark:text-neutral-50 shadow-sm"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-              }`}
+              className="segmented__item"
+              data-active={viewMode === "prd" ? "true" : "false"}
+              aria-pressed={viewMode === "prd"}
             >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Dokumen PRD</span>
+              <FileText />
+              <span>PRD</span>
             </button>
             <button
+              type="button"
               onClick={() => setViewMode("diagram")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                viewMode === "diagram"
-                  ? "bg-white dark:bg-neutral-900 text-neutral-950 dark:text-neutral-50 shadow-sm"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100"
-              }`}
+              className="segmented__item"
+              data-active={viewMode === "diagram" ? "true" : "false"}
+              aria-pressed={viewMode === "diagram"}
             >
-              <Network className="w-3.5 h-3.5" />
-              <span>Bagan Diagram</span>
+              <Network />
+              <span>Diagram</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Real-time Status / Error banners */}
       {statusMessage && (
-        <div className="flex items-center gap-2 p-3 bg-brand/10 border border-brand/30 text-brand-dark dark:text-brand text-xs rounded-xl font-medium animate-pulse">
-          <Loader2 className="w-4 h-4 animate-spin text-brand-dark dark:text-brand" />
+        <div className="notice notice--warning" style={{ marginBottom: 14 }}>
+          <Loader2 className="animate-spin" />
           <span>{statusMessage}</span>
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs rounded-xl font-medium">
-          <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+        <div className="notice notice--danger" style={{ marginBottom: 14 }}>
+          <AlertCircle />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Main Content Workspace (Split or Tabbed) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: PRD Document Viewer */}
+      <div
+        className="workspace-grid"
+        data-mode={viewMode === "both" ? "split" : "single"}
+      >
         {(viewMode === "both" || viewMode === "prd") && (
-          <div className={viewMode === "both" ? "lg:col-span-6" : "lg:col-span-12"}>
+          <div className="workspace-pane">
             <PrdViewer
               content={currentContent}
               projectTitle={project.title}
@@ -480,9 +492,8 @@ export default function ProjectDetailPage({
           </div>
         )}
 
-        {/* Right Column: React Flow + Dagre Infinite Canvas */}
         {(viewMode === "both" || viewMode === "diagram") && (
-          <div className={viewMode === "both" ? "lg:col-span-6" : "lg:col-span-12"}>
+          <div className="workspace-pane">
             <DiagramCanvas
               data={currentDiagram}
               projectTitle={project.title}
@@ -494,69 +505,68 @@ export default function ProjectDetailPage({
         )}
       </div>
 
-      {/* Bottom Section: Step 5 Revisi & Version History */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4 border-t border-neutral-200 dark:border-neutral-800">
-        {/* Step 5: Revision Prompt Input */}
-        <div className="lg:col-span-7 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="w-8 h-8 rounded-lg bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center">
-              <Sparkles className="w-4 h-4" />
-            </div>
+      <div className="workspace-bottom">
+        <section className="panel revision-panel">
+          <div className="revision-panel__head">
+            <Sparkles
+              aria-hidden
+              style={{ width: 16, height: 16, color: "var(--app-warning)", flex: "none" }}
+            />
             <div>
-              <h3 className="text-xs font-bold text-neutral-900 dark:text-neutral-100 uppercase tracking-wider">
-                Step 5: Revisi & Iterasi PRD
-              </h3>
-              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                Masukkan instruksi perubahan. AI akan memperbarui PRD markdown dan menyinkronkan bagan diagram.
+              <h3>Revisi & iterasi</h3>
+              <p>
+                Tulis perubahan yang diinginkan. AI memperbarui markdown PRD dan
+                menyinkronkan diagram pada versi baru.
               </p>
             </div>
           </div>
 
-          <form onSubmit={handleRevisionSubmit} className="space-y-3">
+          <form onSubmit={handleRevisionSubmit}>
+            <label htmlFor="revision-prompt" className="field-label">
+              Instruksi revisi
+            </label>
             <textarea
+              id="revision-prompt"
               value={revisionPrompt}
               onChange={(e) => setRevisionPrompt(e.target.value)}
               disabled={isRevising || isStreamingPrd}
               rows={3}
-              placeholder="Contoh: Tambahkan modul sistem notifikasi email pada Fase 2 dan perinci arsitektur autentikasi..."
-              className="w-full px-3.5 py-2.5 text-xs leading-relaxed border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:bg-neutral-100 dark:disabled:bg-neutral-800"
+              placeholder="Contoh: Tambahkan modul notifikasi email pada Fase 2 dan perinci arsitektur autentikasi..."
+              className="field"
             />
 
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] text-neutral-400 dark:text-neutral-500">
-                Setiap revisi akan disimpan sebagai versi baru (v2, v3, dst).
+            <div className="form-actions" style={{ marginTop: 12 }}>
+              <span className="field-help">
+                Setiap revisi disimpan sebagai versi baru.
               </span>
 
               <button
                 type="submit"
                 disabled={isRevising || isStreamingPrd || !revisionPrompt.trim()}
-                className="inline-flex items-center gap-2 px-5 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition disabled:opacity-50"
+                className="btn btn--primary"
               >
                 {isRevising ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Memproses Revisi...</span>
+                    <Loader2 className="animate-spin" />
+                    <span>Memproses revisi...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Kirim Instruksi Revisi</span>
+                    <Send />
+                    <span>Kirim instruksi revisi</span>
                   </>
                 )}
               </button>
             </div>
           </form>
-        </div>
+        </section>
 
-        {/* Version History & Revert Audit Trail */}
-        <div className="lg:col-span-5">
-          <VersionHistory
-            versions={project.versions || []}
-            currentVersionId={activeVersion?.id}
-            onSelectVersion={(v) => setActiveVersion(v)}
-            onRevertVersion={handleRevertVersion}
-          />
-        </div>
+        <VersionHistory
+          versions={project.versions || []}
+          currentVersionId={activeVersion?.id}
+          onSelectVersion={(v) => setActiveVersion(v)}
+          onRevertVersion={handleRevertVersion}
+        />
       </div>
     </div>
   );

@@ -79,7 +79,7 @@ export function LandingHero() {
   return (
     <section className="landing-hero" aria-labelledby="landing-title">
       <h1 id="landing-title" className="landing-title">
-        Prompt {">"} PRD {">"}Diagram
+        Prompt <span className="flow__arrow">→</span> PRD <span className="flow__arrow">→</span> Diagram
       </h1>
       <p className="landing-sub">
         Satu prompt sudah cukup untuk menghasilkan PRD yang siap direview, lengkap

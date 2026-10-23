@@ -14,10 +14,9 @@ import {
   CheckCircle,
   XCircle,
   Loader2,
-  Sparkles,
   Lock,
-  Users,
   ShieldCheck,
+  AlertCircle,
   Search,
   X,
   ListFilter,
@@ -342,210 +341,224 @@ export default function AdminPage() {
 
   if (status === "loading" || loading || usersLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-dark dark:text-brand" />
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">Memuat Panel Admin...</span>
+      <div className="app-loading" style={{ minHeight: "50vh" }}>
+        <Loader2 className="animate-spin" />
+        <span>Memuat panel admin...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div>
-          <h1 className="text-xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
-            Panel Manajemen LLM, Kunci API & Role Pengguna
-          </h1>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Admin dapat mengelola model LLM, kunci API terenkripsi, serta mempromosikan pengguna menjadi admin atau menurunkannya kembali.
+    <div className="stack stack--lg">
+      <div className="app-page-head" style={{ marginBottom: 0 }}>
+        <div className="app-page-head__copy">
+          <h1 className="app-page-title">Panel admin</h1>
+          <p className="app-page-sub">
+            Kelola model LLM, kunci API terenkripsi, dan role pengguna dari satu
+            tempat.
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreateModal}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Model LLM</span>
-        </button>
+        <div className="app-page-actions">
+          <button type="button" onClick={handleOpenCreateModal} className="btn btn--primary">
+            <Plus />
+            <span>Tambah model</span>
+          </button>
+        </div>
       </div>
 
+      <section className="admin-summary" aria-label="Ringkasan admin">
+        <div className="admin-summary__item">
+          <div className="admin-summary__label">Model terdaftar</div>
+          <div className="admin-summary__value">{configs.length}</div>
+        </div>
+        <div className="admin-summary__item">
+          <div className="admin-summary__label">Model aktif</div>
+          <div className="admin-summary__value">
+            {configs.filter((config) => config.isActive).length}
+          </div>
+        </div>
+        <div className="admin-summary__item">
+          <div className="admin-summary__label">Pengguna</div>
+          <div className="admin-summary__value">{users.length}</div>
+        </div>
+        <div className="admin-summary__item">
+          <div className="admin-summary__label">Admin</div>
+          <div className="admin-summary__value">
+            {users.filter((user) => user.role === "ADMIN").length}
+          </div>
+        </div>
+      </section>
+
       {error && (
-        <div className="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs rounded-xl">
-          {error}
+        <div className="notice notice--danger">
+          <XCircle />
+          <span>{error}</span>
         </div>
       )}
 
       {/* Table of LLM Configurations */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 font-semibold uppercase tracking-wider text-[11px]">
+      <section className="panel">
+        <div className="panel__head">
+          <div>
+            <h2 className="app-section-title">Model LLM</h2>
+            <p className="app-section-sub">
+              Model aktif dapat dipilih pengguna saat membuat atau merevisi PRD.
+            </p>
+          </div>
+        </div>
+        <div className="data-table-wrap">
+          <table className="data-table data-table--stack">
+            <thead>
               <tr>
-                <th className="py-3.5 px-4">Nama Model</th>
-                <th className="py-3.5 px-4">Provider & ID Model</th>
-                <th className="py-3.5 px-4">OpenAI Base URL</th>
-                <th className="py-3.5 px-4">Status Kunci API</th>
-                <th className="py-3.5 px-4">Status Pengguna</th>
-                <th className="py-3.5 px-4">Ketersediaan</th>
-                <th className="py-3.5 px-4 text-right">Aksi</th>
+                <th>Nama model</th>
+                <th>Provider & ID</th>
+                <th>Base URL</th>
+                <th>Kunci API</th>
+                <th>Status</th>
+                <th>Ketersediaan</th>
+                <th style={{ textAlign: "right" }}>Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+            <tbody>
               {configs.map((cfg) => {
                 const isUnavailable = cfg.isAvailable === false;
                 return (
-                <tr key={cfg.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/60 transition">
-                  {/* Display Name */}
-                  <td className="py-3.5 px-4 font-semibold text-neutral-900 dark:text-neutral-100">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-brand-dark dark:text-brand shrink-0" />
-                      <span>{cfg.displayName}</span>
-                    </div>
-                  </td>
+                  <tr key={cfg.id}>
+                    <td>
+                      <div className="cell-strong">{cfg.displayName}</div>
+                    </td>
 
-                  {/* Provider & Model String */}
-                  <td className="py-3.5 px-4 text-neutral-700 dark:text-neutral-300">
-                    <span className="inline-block uppercase font-bold text-[10px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 mr-1.5">
-                      {cfg.provider}
-                    </span>
-                    <span className="font-mono text-neutral-900 dark:text-neutral-100">{cfg.modelIdentifier}</span>
-                  </td>
-
-                  {/* Base URL */}
-                  <td className="py-3.5 px-4 text-neutral-500 dark:text-neutral-400 font-mono text-[11px] max-w-[200px] truncate" title={cfg.baseUrl}>
-                    {cfg.baseUrl}
-                  </td>
-
-                  {/* Masked API Key */}
-                  <td className="py-3.5 px-4">
-                    {cfg.hasApiKey ? (
-                      <span className="inline-flex items-center gap-1 font-mono text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                        <Lock className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                        {cfg.maskedApiKey || "Tersimpan Aman"}
+                    <td data-label="Provider">
+                      <span className="chip chip--neutral" style={{ marginRight: 6 }}>
+                        {cfg.provider}
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
-                        <KeyRound className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                        Belum Dikonfigurasi
-                      </span>
-                    )}
-                  </td>
+                      <span className="field-mono">{cfg.modelIdentifier}</span>
+                    </td>
 
-                  {/* Active Toggle Status */}
-                  <td className="py-3.5 px-4">
-                    <button
-                      onClick={() => handleToggleActive(cfg)}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition ${
-                        cfg.isActive
-                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/40"
-                          : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                      }`}
+                    <td
+                      className="field-mono"
+                      data-label="Base URL"
+                      style={{ maxWidth: 210, overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={cfg.baseUrl}
                     >
-                      {cfg.isActive ? (
-                        <>
-                          <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                          <span>Aktif (Dapat Dipilih)</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-3 h-3 text-neutral-400 dark:text-neutral-500" />
-                          <span>Nonaktif</span>
-                        </>
-                      )}
-                    </button>
-                  </td>
+                      {cfg.baseUrl}
+                    </td>
 
-                  {/* Availability (manual cooldown override) */}
-                  <td className="py-3.5 px-4">
-                    {isUnavailable ? (
-                      <div className="space-y-0.5">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
-                          <XCircle className="w-3 h-3" />
-                          Tidak Tersedia
+                    <td data-label="Kunci API">
+                      {cfg.hasApiKey ? (
+                        <span className="chip chip--success">
+                          <Lock />
+                          {cfg.maskedApiKey || "Tersimpan"}
                         </span>
-                        {cfg.unavailableUntil && (
-                          <div className="text-[10px] text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
-                            s.d.{" "}
-                            {new Date(cfg.unavailableUntil).toLocaleString("id-ID", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </div>
-                        )}
-                        {cfg.unavailableReason && (
-                          <div
-                            className="text-[10px] text-neutral-500 dark:text-neutral-400 max-w-[180px] truncate"
-                            title={cfg.unavailableReason}
-                          >
-                            {cfg.unavailableReason}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                        <CheckCircle className="w-3 h-3" />
-                        Tersedia
-                      </span>
-                    )}
-                  </td>
+                      ) : (
+                        <span className="chip chip--warning">
+                          <KeyRound />
+                          Belum diatur
+                        </span>
+                      )}
+                    </td>
 
-                  {/* Actions */}
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
+                    <td data-label="Status">
                       <button
-                        onClick={() => handleOpenAvailabilityModal(cfg)}
-                        title="Atur Ketersediaan Manual"
-                        className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-50 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
+                        type="button"
+                        onClick={() => handleToggleActive(cfg)}
+                        className={`chip ${cfg.isActive ? "chip--success" : "chip--neutral"}`}
+                        title="Ubah status model"
                       >
-                        <Clock className="w-3.5 h-3.5" />
+                        {cfg.isActive ? <CheckCircle /> : <XCircle />}
+                        <span>{cfg.isActive ? "Aktif" : "Nonaktif"}</span>
                       </button>
-                      <button
-                        onClick={() => handleOpenEditModal(cfg)}
-                        title="Edit Model / API Key"
-                        className="p-1.5 text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-neutral-50 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cfg.id, cfg.displayName)}
-                        title="Hapus Model"
-                        className="p-1.5 text-neutral-400 dark:text-neutral-500 hover:text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                    </td>
+
+                    <td data-label="Ketersediaan">
+                      {isUnavailable ? (
+                        <div>
+                          <span className="chip chip--danger">
+                            <XCircle />
+                            Tidak tersedia
+                          </span>
+                          {cfg.unavailableUntil && (
+                            <div className="app-meta" style={{ marginTop: 4, fontSize: 10.5 }}>
+                              s.d.{" "}
+                              {new Date(cfg.unavailableUntil).toLocaleString("id-ID", {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
+                          )}
+                          {cfg.unavailableReason && (
+                            <div
+                              className="app-meta"
+                              style={{ marginTop: 3, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                              title={cfg.unavailableReason}
+                            >
+                              {cfg.unavailableReason}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="chip chip--success">
+                          <CheckCircle />
+                          Tersedia
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="cell-actions" data-label="Aksi">
+                      <div className="row-actions">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenAvailabilityModal(cfg)}
+                          title="Atur ketersediaan manual"
+                          className="row-action"
+                        >
+                          <Clock />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditModal(cfg)}
+                          title="Edit model atau API key"
+                          className="row-action"
+                        >
+                          <Edit2 />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(cfg.id, cfg.displayName)}
+                          title="Hapus model"
+                          className="row-action row-action--danger"
+                        >
+                          <Trash2 />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       {/* User Role Management */}
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-brand-dark dark:text-brand" />
-            <h2 className="text-sm font-bold text-neutral-900 dark:text-neutral-100">Manajemen Role Pengguna</h2>
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
-              {users.length} akun · {users.filter((u) => u.role === "ADMIN").length} admin
-            </span>
+      <section className="panel">
+        <div className="panel__head">
+          <div>
+            <h2 className="app-section-title">Role pengguna</h2>
+            <p className="app-section-sub">
+              {users.length} akun · {users.filter((u) => u.role === "ADMIN").length} admin.
+              Perubahan role berlaku pada sesi pengguna terkait.
+            </p>
           </div>
-          <p className="text-[11px] text-neutral-400 dark:text-neutral-500">
-            Perubahan role langsung berlaku pada sesi pengguna terkait.
-          </p>
         </div>
 
-        <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center gap-2">
-          <div className="relative max-w-xs w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500 pointer-events-none" />
+        <div className="toolbar">
+          <div className="search-field">
+            <Search />
             <input
               type="text"
               value={userSearch}
@@ -555,7 +568,7 @@ export default function AdminPage() {
               }}
               placeholder="Cari nama atau email..."
               aria-label="Cari pengguna berdasarkan nama atau email"
-              className="w-full pl-9 pr-8 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+              className="field"
             />
             {userSearch && (
               <button
@@ -565,102 +578,95 @@ export default function AdminPage() {
                   setUserPage(1);
                 }}
                 aria-label="Hapus pencarian"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-700 dark:text-neutral-500 dark:hover:text-neutral-300 rounded"
+                className="search-field__clear"
               >
-                <X className="w-3.5 h-3.5" />
+                <X />
               </button>
             )}
           </div>
 
-          <div
-            role="group"
-            aria-label="Filter role pengguna"
-            className="inline-flex items-center gap-1 p-1 rounded-lg bg-neutral-100 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 self-start sm:self-auto"
-          >
-            <ListFilter className="w-3.5 h-3.5 ml-1.5 text-neutral-500 dark:text-neutral-400" aria-hidden="true" />
-            {USER_ROLE_FILTERS.map((option) => {
-              const isActive = userRoleFilter === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setUserRoleFilter(option.value);
-                    setUserPage(1);
-                  }}
-                  aria-pressed={isActive}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition ${
-                    isActive
-                      ? "bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-sm"
-                      : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200"
-                  }`}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
+          <div className="toolbar__group">
+            <ListFilter
+              aria-hidden
+              style={{ width: 14, height: 14, color: "var(--app-muted)" }}
+            />
+            <div className="segmented" role="group" aria-label="Filter role pengguna">
+              {USER_ROLE_FILTERS.map((option) => {
+                const isActive = userRoleFilter === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => {
+                      setUserRoleFilter(option.value);
+                      setUserPage(1);
+                    }}
+                    aria-pressed={isActive}
+                    className="segmented__item"
+                    data-active={isActive ? "true" : "false"}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {usersError && (
-          <div className="m-4 p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs rounded-lg">
-            {usersError}
+          <div style={{ padding: "14px 18px" }}>
+            <div className="notice notice--danger">
+              <AlertCircle />
+              <span>{usersError}</span>
+            </div>
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 font-semibold uppercase tracking-wider text-[11px]">
+        <div className="data-table-wrap">
+          <table className="data-table data-table--stack">
+            <thead>
               <tr>
-                <th className="py-3.5 px-4">Pengguna</th>
-                <th className="py-3.5 px-4">Role Saat Ini</th>
-                <th className="py-3.5 px-4">Proyek</th>
-                <th className="py-3.5 px-4">Bergabung</th>
-                <th className="py-3.5 px-4 text-right">Aksi</th>
+                <th>Pengguna</th>
+                <th>Role</th>
+                <th className="num">Proyek</th>
+                <th>Bergabung</th>
+                <th style={{ textAlign: "right" }}>Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+            <tbody>
               {pagedUsers.map((u) => {
                 const isSelf = session?.user?.id === u.id;
                 const isUpdating = updatingUserId === u.id;
                 return (
-                  <tr key={u.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/60 transition">
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-[11px] font-bold text-neutral-600 dark:text-neutral-300 shrink-0">
+                  <tr key={u.id}>
+                    <td>
+                      <div className="user-cell">
+                        <span className="user-cell__avatar" aria-hidden>
                           {(u.name || u.email).charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-semibold text-neutral-900 dark:text-neutral-100 truncate">
-                              {u.name || u.email.split("@")[0]}
-                            </span>
-                            {isSelf && (
-                              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-brand/20 text-brand-dark dark:text-brand">
-                                Anda
-                              </span>
-                            )}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div className="user-cell__name">
+                            <span>{u.name || u.email.split("@")[0]}</span>
+                            {isSelf && <span className="chip chip--accent">Anda</span>}
                           </div>
-                          <div className="font-mono text-[10px] text-neutral-500 dark:text-neutral-400 truncate">{u.email}</div>
+                          <div className="user-cell__email">{u.email}</div>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-3.5 px-4">
+                    <td data-label="Role">
                       {u.role === "ADMIN" ? (
-                        <span className="inline-flex items-center gap-1 font-bold text-[11px] text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                          <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                          ADMIN
+                        <span className="chip chip--success">
+                          <ShieldCheck />
+                          Admin
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 font-semibold text-[11px] text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-200 dark:border-neutral-700">
-                          USER
-                        </span>
+                        <span className="chip chip--neutral">User</span>
                       )}
                     </td>
 
-                    <td className="py-3.5 px-4 text-neutral-500 dark:text-neutral-400">{u.projectCount}</td>
-                    <td className="py-3.5 px-4 text-neutral-500 dark:text-neutral-400">
+                    <td className="num" data-label="Proyek">{u.projectCount}</td>
+                    <td data-label="Bergabung">
                       {new Date(u.createdAt).toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "short",
@@ -668,25 +674,24 @@ export default function AdminPage() {
                       })}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="cell-actions" data-label="Aksi">
                       <button
+                        type="button"
                         onClick={() => handleToggleUserRole(u)}
                         disabled={isSelf || isUpdating}
                         title={isSelf ? "Tidak dapat mengubah role akun sendiri" : undefined}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition disabled:opacity-40 disabled:cursor-not-allowed ${
-                          u.role === "ADMIN"
-                            ? "text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                            : "bg-brand hover:bg-brand-hover text-neutral-950 shadow-sm"
-                        }`}
+                        className="btn btn--secondary btn--sm"
                       >
                         {isUpdating ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <Loader2 className="animate-spin" />
                         ) : u.role === "ADMIN" ? (
-                          <XCircle className="w-3 h-3" />
+                          <XCircle />
                         ) : (
-                          <ShieldCheck className="w-3 h-3" />
+                          <ShieldCheck />
                         )}
-                        {u.role === "ADMIN" ? "Turunkan ke User" : "Jadikan Admin"}
+                        <span>
+                          {u.role === "ADMIN" ? "Turunkan ke user" : "Jadikan admin"}
+                        </span>
                       </button>
                     </td>
                   </tr>
@@ -694,7 +699,7 @@ export default function AdminPage() {
               })}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-8 px-4 text-center text-neutral-500 dark:text-neutral-400">
+                  <td colSpan={5} className="table-empty">
                     {userEmptyMessage}
                   </td>
                 </tr>
@@ -703,27 +708,27 @@ export default function AdminPage() {
           </table>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-neutral-200 dark:border-neutral-800">
-          <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+        <div className="panel__foot">
+          <p className="app-meta">
             Menampilkan {userRangeStart}–{userRangeEnd} dari {filteredUsers.length} pengguna
           </p>
 
-          <div className="flex items-center gap-1">
+          <div className="pagination">
             <button
               type="button"
               onClick={() => setUserPage(Math.max(1, currentUserPage - 1))}
               disabled={currentUserPage <= 1}
               aria-label="Halaman sebelumnya"
-              className="p-1.5 rounded-lg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="pagination__arrow"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft />
             </button>
 
             {userPageItems.map((item, index) =>
               item === "ellipsis" ? (
                 <span
                   key={`ellipsis-${index}`}
-                  className="w-6 text-center text-[11px] text-neutral-400 dark:text-neutral-500"
+                  style={{ width: 24, textAlign: "center", color: "var(--app-faint)", fontSize: 11 }}
                 >
                   …
                 </span>
@@ -733,11 +738,7 @@ export default function AdminPage() {
                   type="button"
                   onClick={() => setUserPage(item)}
                   aria-current={item === currentUserPage ? "page" : undefined}
-                  className={`min-w-[28px] h-7 px-2 rounded-lg text-[11px] font-semibold transition ${
-                    item === currentUserPage
-                      ? "bg-brand text-neutral-950"
-                      : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  }`}
+                  className="pagination__page"
                 >
                   {item}
                 </button>
@@ -749,140 +750,174 @@ export default function AdminPage() {
               onClick={() => setUserPage(Math.min(totalUserPages, currentUserPage + 1))}
               disabled={currentUserPage >= totalUserPages}
               aria-label="Halaman berikutnya"
-              className="p-1.5 rounded-lg text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="pagination__arrow"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight />
             </button>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Modal Dialog for Add/Edit LLM */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <h3 className="font-bold text-sm text-neutral-900 dark:text-neutral-100">
-                {editingConfig ? `Edit LLM: ${editingConfig.displayName}` : "Tambah Model LLM Baru"}
-              </h3>
+        <div className="modal-backdrop">
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="llm-modal-title"
+          >
+            <div className="modal__head">
+              <div>
+                <h2 id="llm-modal-title" className="modal__title">
+                  {editingConfig
+                    ? `Edit model: ${editingConfig.displayName}`
+                    : "Tambah model LLM"}
+                </h2>
+                <p className="modal__sub">
+                  Konfigurasi ini dipakai seluruh workspace saat memanggil provider.
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 text-base font-bold"
+                aria-label="Tutup dialog"
+                className="modal__close"
               >
-                ✕
+                <X />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-3.5 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Provider</label>
-                  <select
-                    value={formData.provider}
-                    onChange={(e) => {
-                      const prov = e.target.value;
-                      setFormData((prev) => ({
-                        ...prev,
-                        provider: prov,
-                        baseUrl:
-                          prov === "google"
-                            ? "https://generativelanguage.googleapis.com/v1beta/openai/"
-                            : "https://api.deepseek.com/v1",
-                      }));
-                    }}
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                  >
-                    <option value="google">Google AI (Antigravity/Gemini)</option>
-                    <option value="deepseek">DeepSeek</option>
-                    <option value="openai">OpenAI Compatible</option>
-                  </select>
+            <form onSubmit={handleSave}>
+              <div className="form-grid">
+                <div className="form-grid form-grid--split">
+                  <div>
+                    <label htmlFor="llm-provider" className="field-label">
+                      Provider
+                    </label>
+                    <select
+                      id="llm-provider"
+                      value={formData.provider}
+                      onChange={(e) => {
+                        const prov = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          provider: prov,
+                          baseUrl:
+                            prov === "google"
+                              ? "https://generativelanguage.googleapis.com/v1beta/openai/"
+                              : "https://api.deepseek.com/v1",
+                        }));
+                      }}
+                      className="select"
+                    >
+                      <option value="google">Google AI (Antigravity/Gemini)</option>
+                      <option value="deepseek">DeepSeek</option>
+                      <option value="openai">OpenAI Compatible</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="llm-name" className="field-label">
+                      Nama tampilan
+                    </label>
+                    <input
+                      id="llm-name"
+                      type="text"
+                      value={formData.displayName}
+                      onChange={(e) =>
+                        setFormData({ ...formData, displayName: e.target.value })
+                      }
+                      placeholder="Antigravity Flash 3.8"
+                      required
+                      className="field"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Nama Tampilan UI</label>
+                  <label htmlFor="llm-model" className="field-label">
+                    Model identifier
+                  </label>
                   <input
+                    id="llm-model"
                     type="text"
-                    value={formData.displayName}
-                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                    placeholder="Antigravity Flash 3.8"
+                    value={formData.modelIdentifier}
+                    onChange={(e) =>
+                      setFormData({ ...formData, modelIdentifier: e.target.value })
+                    }
+                    placeholder="gemini-2.5-flash atau deepseek-chat"
                     required
-                    className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
+                    className="field field-mono"
                   />
                 </div>
+
+                <div>
+                  <label htmlFor="llm-base-url" className="field-label">
+                    OpenAI compatible base URL
+                  </label>
+                  <input
+                    id="llm-base-url"
+                    type="url"
+                    value={formData.baseUrl}
+                    onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+                    placeholder="https://..."
+                    required
+                    className="field field-mono"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="llm-api-key" className="field-label">
+                    API key{" "}
+                    {editingConfig ? "(kosongkan jika tidak diubah)" : ""}
+                  </label>
+                  <input
+                    id="llm-api-key"
+                    type="password"
+                    value={formData.apiKey}
+                    onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                    placeholder={
+                      editingConfig?.hasApiKey
+                        ? "Kunci saat ini tersimpan terenkripsi"
+                        : "Masukkan API key"
+                    }
+                    className="field"
+                  />
+                  <p className="field-help">
+                    <Lock
+                      style={{ display: "inline", width: 11, height: 11, marginRight: 4 }}
+                    />
+                    Kunci dienkripsi AES-256-GCM di server sebelum disimpan.
+                  </p>
+                </div>
+
+                <div className="toolbar__group">
+                  <input
+                    type="checkbox"
+                    id="isActiveToggle"
+                    checked={formData.isActive}
+                    onChange={(e) =>
+                      setFormData({ ...formData, isActive: e.target.checked })
+                    }
+                    style={{ width: 16, height: 16, accentColor: "var(--app-accent)" }}
+                  />
+                  <label htmlFor="isActiveToggle" className="field-label" style={{ margin: 0 }}>
+                    Aktif dan dapat dipilih pengguna
+                  </label>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Model Identifier (String Model)
-                </label>
-                <input
-                  type="text"
-                  value={formData.modelIdentifier}
-                  onChange={(e) => setFormData({ ...formData, modelIdentifier: e.target.value })}
-                  placeholder="gemini-2.5-flash atau deepseek-chat"
-                  required
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 font-mono focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  OpenAI Compatible Base URL
-                </label>
-                <input
-                  type="url"
-                  value={formData.baseUrl}
-                  onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-                  placeholder="https://..."
-                  required
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 font-mono focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  API Key LLM {editingConfig ? "(Biarkan kosong jika tidak ingin mengubah)" : ""}
-                </label>
-                <input
-                  type="password"
-                  value={formData.apiKey}
-                  onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
-                  placeholder={editingConfig?.hasApiKey ? "Kunci saat ini tersimpan terenkripsi" : "Masukkan API key"}
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
-                <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-1 flex items-center gap-1">
-                  <Lock className="w-3 h-3" />
-                  Kunci akan dienkripsi dengan standar AES-256-GCM di server sebelum disimpan ke database.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="isActiveToggle"
-                  checked={formData.isActive}
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                  className="w-4 h-4 text-brand rounded border-neutral-300 dark:border-neutral-700 focus:ring-brand"
-                />
-                <label htmlFor="isActiveToggle" className="font-semibold text-neutral-800 dark:text-neutral-200">
-                  Aktifkan model ini untuk dipilih oleh pengguna
-                </label>
-              </div>
-
-              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="modal__actions">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                  className="btn btn--secondary"
                 >
                   Batal
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="px-5 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold rounded-lg shadow-sm transition disabled:opacity-50"
-                >
-                  {isSaving ? "Menyimpan..." : "Simpan Konfigurasi"}
+                <button type="submit" disabled={isSaving} className="btn btn--primary">
+                  {isSaving ? "Menyimpan..." : "Simpan konfigurasi"}
                 </button>
               </div>
             </form>
@@ -892,74 +927,89 @@ export default function AdminPage() {
 
       {/* Modal Dialog for Manual Availability Override */}
       {availabilityConfig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+        <div className="modal-backdrop">
+          <div
+            className="modal modal--sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="availability-modal-title"
+          >
+            <div className="modal__head">
               <div>
-                <h3 className="font-bold text-sm text-neutral-900 dark:text-neutral-100 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-brand-dark dark:text-brand" />
-                  Atur Ketersediaan Manual
-                </h3>
-                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  {availabilityConfig.displayName}
-                </p>
+                <h2 id="availability-modal-title" className="modal__title">
+                  Atur ketersediaan
+                </h2>
+                <p className="modal__sub">{availabilityConfig.displayName}</p>
               </div>
               <button
+                type="button"
                 onClick={() => setAvailabilityConfig(null)}
-                className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 text-base font-bold"
+                aria-label="Tutup dialog"
+                className="modal__close"
               >
-                ✕
+                <X />
               </button>
             </div>
 
-            <form onSubmit={handleSaveAvailability} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Tidak Tersedia Sampai
-                </label>
-                <input
-                  type="datetime-local"
-                  value={availabilityForm.unavailableUntil}
-                  onChange={(e) =>
-                    setAvailabilityForm((prev) => ({ ...prev, unavailableUntil: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
-                <p className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-1">
-                  Kosongkan tanggal lalu simpan untuk menandai model tersedia kembali.
-                </p>
+            <form onSubmit={handleSaveAvailability}>
+              <div className="form-grid">
+                <div>
+                  <label htmlFor="unavailable-until" className="field-label">
+                    Tidak tersedia sampai
+                  </label>
+                  <input
+                    id="unavailable-until"
+                    type="datetime-local"
+                    value={availabilityForm.unavailableUntil}
+                    onChange={(e) =>
+                      setAvailabilityForm((prev) => ({
+                        ...prev,
+                        unavailableUntil: e.target.value,
+                      }))
+                    }
+                    className="field"
+                  />
+                  <p className="field-help">
+                    Kosongkan tanggal lalu simpan untuk menandai model tersedia
+                    kembali.
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="unavailable-reason" className="field-label">
+                    Alasan
+                  </label>
+                  <input
+                    id="unavailable-reason"
+                    type="text"
+                    value={availabilityForm.unavailableReason}
+                    onChange={(e) =>
+                      setAvailabilityForm((prev) => ({
+                        ...prev,
+                        unavailableReason: e.target.value,
+                      }))
+                    }
+                    placeholder="Contoh: Kuota provider habis"
+                    disabled={!availabilityForm.unavailableUntil}
+                    className="field"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Alasan Tidak Tersedia
-                </label>
-                <input
-                  type="text"
-                  value={availabilityForm.unavailableReason}
-                  onChange={(e) =>
-                    setAvailabilityForm((prev) => ({ ...prev, unavailableReason: e.target.value }))
-                  }
-                  placeholder="Contoh: Kuota provider habis"
-                  disabled={!availabilityForm.unavailableUntil}
-                  className="w-full px-3 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </div>
-
-              <div className="pt-3 flex justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="modal__actions">
                 <button
                   type="button"
                   onClick={() => setAvailabilityConfig(null)}
-                  className="px-4 py-2 border border-neutral-300 dark:border-neutral-700 rounded-lg font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-900"
+                  className="btn btn--secondary"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingAvailability}
-                  className="px-5 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold rounded-lg shadow-sm transition disabled:opacity-50"
+                  className="btn btn--primary"
                 >
-                  {isSavingAvailability ? "Menyimpan..." : "Simpan Ketersediaan"}
+                  {isSavingAvailability ? "Menyimpan..." : "Simpan ketersediaan"}
                 </button>
               </div>
             </form>

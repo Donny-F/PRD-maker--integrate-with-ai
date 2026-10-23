@@ -16,35 +16,38 @@ function CustomNodeComponent({ data }: NodeProps) {
   const isSubfeature = nodeData.nodeType === "subfeature";
   const isSubfeatureGroup = nodeData.nodeType === "subfeatureGroup";
 
+  const handleStyle = {
+    width: 12,
+    height: 12,
+    background: "var(--app-accent)",
+    borderColor: "var(--app-surface)",
+    borderWidth: 2,
+  };
+
   if (isSubfeatureGroup) {
     const items = nodeData.items ?? [];
 
     return (
-      <div className="w-[260px] px-3 py-2.5 rounded-lg shadow-sm border bg-neutral-50/70 dark:bg-neutral-800/60 border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200">
+      <div className="diagram-node diagram-node--group">
         <Handle
           type="target"
           position={Position.Left}
-          className="w-3 h-3 bg-brand border-2 border-white dark:border-neutral-900 rounded-full !-left-1.5"
+          style={handleStyle}
+          className="!-left-1.5"
         />
 
-        <div className="flex items-center gap-1.5 mb-2">
-          <ListChecks className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span className="font-semibold tracking-wider uppercase text-[10px] text-neutral-500 dark:text-neutral-400">
-            Sub Fitur
+        <div className="diagram-node__head">
+          <span className="diagram-node__type">
+            <ListChecks />
+            Sub-fitur
           </span>
-          <span className="ml-auto text-[10px] font-medium text-neutral-400 dark:text-neutral-500">
-            {items.length}
-          </span>
+          <span className="chip chip--neutral">{items.length}</span>
         </div>
 
-        <ul className="space-y-0">
+        <ul className="diagram-node__items">
           {items.map((item, idx) => (
-            <li
-              key={`${idx}-${item}`}
-              className="flex gap-1.5 py-1 text-[11px] leading-snug text-neutral-700 dark:text-neutral-300"
-            >
-              <span className="text-brand-dark dark:text-brand select-none">•</span>
-              <span className="min-w-0 break-words">{item}</span>
+            <li key={`${idx}-${item}`}>
+              <span>{item}</span>
             </li>
           ))}
         </ul>
@@ -54,66 +57,42 @@ function CustomNodeComponent({ data }: NodeProps) {
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg shadow-sm border transition-all duration-150 min-w-[220px] max-w-[260px] ${
+      className={`diagram-node ${
         isEpic
-          ? "border-2 border-brand-dark bg-brand ring-2 ring-brand/30 shadow-md text-neutral-950"
+          ? "diagram-node--epic"
           : isFeature
-          ? "bg-white dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700 hover:border-brand shadow-sm text-neutral-900 dark:text-neutral-100"
-          : "bg-neutral-100 dark:bg-neutral-800/60 border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-200 text-xs"
+            ? "diagram-node--feature"
+            : "diagram-node--feature"
       }`}
     >
-      {/* Target Handle on the Left (for incoming connections) */}
       {!isEpic && (
         <Handle
           type="target"
           position={Position.Left}
-          className="w-3 h-3 bg-brand border-2 border-white dark:border-neutral-900 rounded-full !-left-1.5"
+          style={handleStyle}
+          className="!-left-1.5"
         />
       )}
 
-      {/* Header with Type indicator and Phase badge */}
-      <div className="flex items-center justify-between gap-2 mb-1.5">
-        <div className="flex items-center gap-1.5">
-          {isEpic && <Box className="w-4 h-4 text-neutral-950" />}
-          {isFeature && <Layers className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-400" />}
-          {isSubfeature && <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />}
-          <span
-            className={`font-semibold tracking-wider uppercase text-[10px] ${
-              isEpic ? "text-neutral-950/70" : "text-neutral-500 dark:text-neutral-400"
-            }`}
-          >
-            {isEpic ? "Epic (Root)" : isFeature ? "Fitur" : "Sub-fitur"}
-          </span>
-        </div>
+      <div className="diagram-node__head">
+        <span className="diagram-node__type">
+          {isEpic ? <Box /> : isFeature ? <Layers /> : <CheckCircle2 />}
+          {isEpic ? "Epic" : isFeature ? "Fitur" : "Sub-fitur"}
+        </span>
 
         {nodeData.phase && (
-          <span
-            className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-              isEpic
-                ? "bg-neutral-950/10 text-neutral-950 border-neutral-950/20"
-                : "bg-brand/15 text-brand-dark dark:text-brand border-brand/30"
-            }`}
-          >
-            {nodeData.phase}
-          </span>
+          <span className="diagram-node__phase">{nodeData.phase}</span>
         )}
       </div>
 
-      {/* Node Title / Label */}
-      <div
-        className={`font-medium break-words leading-snug ${
-          isEpic ? "text-sm text-neutral-950" : isFeature ? "text-xs text-neutral-900 dark:text-neutral-100" : "text-xs text-neutral-700 dark:text-neutral-300"
-        }`}
-      >
-        {nodeData.label}
-      </div>
+      <div className="diagram-node__title">{nodeData.label}</div>
 
-      {/* Source Handle on the Right (for outgoing connections) */}
       {!isSubfeature && (
         <Handle
           type="source"
           position={Position.Right}
-          className="w-3 h-3 bg-brand border-2 border-white dark:border-neutral-900 rounded-full !-right-1.5"
+          style={handleStyle}
+          className="!-right-1.5"
         />
       )}
     </div>

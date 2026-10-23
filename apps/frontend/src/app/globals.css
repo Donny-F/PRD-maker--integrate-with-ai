@@ -3,44 +3,69 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+  html {
+    background: #dfe4e6;
   }
 
   html.dark {
     color-scheme: dark;
+    background: #060708;
   }
 
   body {
-    @apply bg-[#fafafa] text-neutral-900 antialiased selection:bg-[#ffc200]/30 selection:text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 dark:selection:text-neutral-950;
+    margin: 0;
+    background: var(--app-ground);
+    color: var(--app-ink);
+    @apply antialiased;
+  }
+
+  ::selection {
+    background: rgba(255, 194, 0, 0.32);
+    color: #14181b;
+  }
+
+  :focus-visible {
+    outline: 2px solid #ffc200;
+    outline-offset: 3px;
   }
 }
 
 /*
- * React Flow ships light-only controls/minimap chrome; these overrides keep
- * the view-only canvas legible when the app is in dark mode.
+ * React Flow ships light-only controls/minimap chrome. These overrides map its
+ * small floating controls onto the studio tokens so the read-only canvas works
+ * in both themes.
  */
-.dark .react-flow__controls-button {
-  background: #171717;
-  border-bottom: 1px solid #404040;
-  color: #e5e5e5;
+.react-flow__controls {
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 9px;
+  box-shadow: var(--app-shadow-pop);
 }
 
-.dark .react-flow__controls-button:hover {
-  background: #262626;
+.react-flow__controls-button {
+  background: var(--app-surface);
+  border-bottom: 1px solid var(--app-line);
+  color: var(--app-body);
 }
 
-.dark .react-flow__controls-button svg {
+.react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--app-surface-2);
+}
+
+.react-flow__controls-button svg {
   fill: currentColor;
   color: currentColor;
 }
 
-.dark .react-flow__minimap {
-  background: #171717;
+.react-flow__attribution {
+  background: var(--app-surface);
+  color: var(--app-faint);
 }
 
-.dark .react-flow__attribution {
-  background: rgba(23, 23, 23, 0.8);
-  color: #a3a3a3;
+.react-flow__attribution a {
+  color: var(--app-muted);
 }

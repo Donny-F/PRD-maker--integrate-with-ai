@@ -1,8 +1,21 @@
 import "./globals.css";
+import "./app-ui.css";
 import React from "react";
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+
+/**
+ * The app and the marketing page share one typeface. Loading it at the root
+ * keeps the working screens from falling back to the platform UI stack while
+ * the landing page keeps its own `--font-landing` alias in `(marketing)/layout`.
+ */
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-app",
+});
 
 export const metadata: Metadata = {
   title: "PRD Maker — Prompt, PRD, Diagram",
@@ -30,7 +43,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-screen flex flex-col font-sans">
+      <body className={`${inter.variable} min-h-screen font-sans`}>
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
         </ThemeProvider>

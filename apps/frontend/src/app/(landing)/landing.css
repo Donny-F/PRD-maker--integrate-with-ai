@@ -19,7 +19,7 @@
   flex-direction: column;
   background: var(--ground);
   color: var(--ink);
-  font-family: var(--font-landing, Inter), ui-sans-serif, system-ui, -apple-system,
+  font-family: var(--font-app, Inter), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
 
   --ground: #dfe4e6;

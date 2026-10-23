@@ -12,7 +12,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { toPng } from "html-to-image";
-import { Download, RefreshCw, ZoomIn } from "lucide-react";
+import { Download, Network, RefreshCw } from "lucide-react";
 import { CustomNode } from "./CustomNode";
 import { getLayoutedElements } from "@/lib/dagre";
 import { DiagramData } from "@/lib/api";
@@ -76,7 +76,7 @@ export function DiagramCanvas({
       );
 
       const dataUrl = await toPng(viewportElem, {
-        backgroundColor: isDark ? "#171717" : "#fafafa",
+        backgroundColor: isDark ? "#161a1d" : "#f5f6f6",
         width: imageWidth,
         height: imageHeight,
         pixelRatio: 2, // 2x crisp export
@@ -102,97 +102,115 @@ export function DiagramCanvas({
 
   if (!data.nodes || data.nodes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-neutral-50/50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-xl">
-        <div className="w-12 h-12 mb-3 flex items-center justify-center rounded-full bg-brand/10 text-brand-dark dark:text-brand">
-          <ZoomIn className="w-6 h-6" />
+      <section className="work-panel" aria-label="Diagram alur">
+        <div className="work-panel__head">
+          <div className="work-panel__title">
+            <Network />
+            <span>Diagram alur</span>
+          </div>
         </div>
-        <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 mb-1">
-          Bagan Diagram Belum Digenerate
-        </h4>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mb-4">
-          Diagram relasi akan digenerate secara otomatis berdasarkan dokumen PRD setelah Step 3 selesai.
-        </p>
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-neutral-950 bg-brand hover:bg-brand-hover rounded-lg shadow-sm transition"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-            Generate Diagram Sekarang
-          </button>
-        )}
-      </div>
+        <div className="diagram-empty">
+          <h3 className="app-section-title">Diagram belum dibuat</h3>
+          <p className="app-section-sub" style={{ maxWidth: "48ch" }}>
+            Diagram relasi dibuat otomatis dari dokumen PRD setelah generasi
+            selesai. Anda juga dapat membuatnya sekarang.
+          </p>
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="btn btn--primary btn--sm"
+            >
+              <RefreshCw className={isRefreshing ? "animate-spin" : ""} />
+              <span>Generate diagram</span>
+            </button>
+          )}
+        </div>
+      </section>
     );
   }
 
   return (
-    <div className="relative w-full h-[600px] border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-900 shadow-sm">
-      {/* Top Floating Action Bar */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-2 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm p-1 rounded-lg border border-neutral-200 dark:border-neutral-800 shadow-sm">
-        {onRefresh && (
+    <section className="work-panel" aria-label="Diagram alur">
+      <div className="work-panel__head">
+        <div className="work-panel__title">
+          <Network />
+          <span>Diagram alur</span>
+        </div>
+        <span className="app-meta">{data.nodes.length} node</span>
+      </div>
+
+      <div className="diagram-frame">
+        <div className="diagram-toolbar">
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              title="Sinkronkan ulang diagram"
+              className="btn btn--quiet btn--sm"
+            >
+              <RefreshCw className={isRefreshing ? "animate-spin" : ""} />
+              <span>Regenerate</span>
+            </button>
+          )}
+
           <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Sinkronkan Ulang Diagram"
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md transition"
+            type="button"
+            onClick={handleExportPng}
+            disabled={isExporting}
+            className="btn btn--primary btn--sm"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-brand-dark dark:text-brand" : ""}`} />
-            <span>Regenerate</span>
+            <Download />
+            <span>{isExporting ? "Mengekspor..." : "Unduh PNG"}</span>
           </button>
-        )}
+        </div>
 
-        <button
-          onClick={handleExportPng}
-          disabled={isExporting}
-          className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-neutral-950 bg-brand hover:bg-brand-hover rounded-md shadow-sm transition"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span>{isExporting ? "Mengekspor..." : "Unduh project-prd.png"}</span>
-        </button>
+        <div ref={reactFlowWrapper} style={{ width: "100%", height: "100%" }}>
+          <ReactFlow
+            nodes={layouted.nodes}
+            edges={layouted.edges}
+            nodeTypes={nodeTypes}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            nodesFocusable={false}
+            elementsSelectable={false}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            minZoom={0.2}
+            maxZoom={1.5}
+          >
+            <Background
+              variant={BackgroundVariant.Dots}
+              gap={16}
+              size={isDark ? 1 : 2}
+              color={isDark ? "#3d464b" : "#b4bec2"}
+            />
+            <Controls showInteractive={false} position="bottom-left" />
+            <MiniMap
+              position="bottom-right"
+              style={{
+                width: compactMinimap ? 120 : 200,
+                height: compactMinimap ? 80 : 150,
+                boxSizing: "content-box",
+                background: isDark ? "#1b2024" : "#ffffff",
+                border: `1px solid ${isDark ? "rgba(255,255,255,0.14)" : "rgba(20,24,27,0.11)"}`,
+                borderRadius: 10,
+                overflow: "hidden",
+              }}
+              maskColor={isDark ? "rgba(6,7,8,0.72)" : "rgba(245,246,246,0.72)"}
+              nodeColor={(n) => {
+                const d = n.data as unknown as { nodeType?: string };
+                if (d?.nodeType === "epic") return "#ffc200";
+                if (d?.nodeType === "feature") return isDark ? "#a6b0b6" : "#5a666d";
+                if (d?.nodeType === "subfeatureGroup") return isDark ? "#7e8a90" : "#8b979d";
+                return isDark ? "#3d464b" : "#c8d0d3";
+              }}
+            />
+          </ReactFlow>
+        </div>
       </div>
-
-      {/* React Flow View-Only Canvas */}
-      <div ref={reactFlowWrapper} className="w-full h-full">
-        <ReactFlow
-          nodes={layouted.nodes}
-          edges={layouted.edges}
-          nodeTypes={nodeTypes}
-          nodesDraggable={false}
-          nodesConnectable={false}
-          nodesFocusable={false}
-          elementsSelectable={false}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          minZoom={0.2}
-          maxZoom={1.5}
-        >
-          <Background
-            variant={BackgroundVariant.Dots}
-            gap={16}
-            size={isDark ? 1 : 2}
-            color={isDark ? "#525252" : "#94a3b8"}
-          />
-          <Controls showInteractive={false} position="bottom-left" />
-          <MiniMap
-            position="bottom-right"
-            style={{
-              width: compactMinimap ? 120 : 200,
-              height: compactMinimap ? 80 : 150,
-              boxSizing: "content-box",
-            }}
-            maskColor={isDark ? "rgba(10,10,10,0.7)" : "rgba(255,255,255,0.7)"}
-            nodeColor={(n) => {
-              const d = n.data as unknown as { nodeType?: string };
-              if (d?.nodeType === "epic") return "#ffc200";
-              if (d?.nodeType === "feature") return isDark ? "#a3a3a3" : "#64748b";
-              if (d?.nodeType === "subfeatureGroup") return isDark ? "#737373" : "#94a3b8";
-              return isDark ? "#525252" : "#cbd5e1";
-            }}
-            className="!border !border-neutral-200 dark:!border-neutral-800 !rounded-lg !shadow-sm !overflow-hidden"
-          />
-        </ReactFlow>
-      </div>
-    </div>
+    </section>
   );
 }

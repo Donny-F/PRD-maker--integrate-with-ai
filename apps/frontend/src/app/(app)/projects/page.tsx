@@ -5,7 +5,15 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api, Project } from "@/lib/api";
-import { Plus, FileText, ArrowRight, Trash2, Calendar, GitBranch, Loader2 } from "lucide-react";
+import {
+  Plus,
+  FileText,
+  ArrowRight,
+  Trash2,
+  Calendar,
+  GitBranch,
+  Loader2,
+} from "lucide-react";
 
 export default function ProjectsPage() {
   const { data: session, status } = useSession();
@@ -54,113 +62,164 @@ export default function ProjectsPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-6 h-6 animate-spin text-brand-dark dark:text-brand" />
-        <span className="text-xs text-neutral-500 dark:text-neutral-400">Memuat daftar proyek...</span>
+      <div className="app-loading">
+        <Loader2 className="animate-spin" />
+        <span>Memuat proyek...</span>
       </div>
     );
   }
 
+  const totalVersions = projects.reduce(
+    (sum, project) => sum + (project.versions?.length || 1),
+    0
+  );
+  const latestProject = projects.reduce<Project | null>((latest, project) => {
+    if (!latest) return project;
+    return new Date(project.updatedAt) > new Date(latest.updatedAt) ? project : latest;
+  }, null);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200 dark:border-neutral-800">
-        <div>
-          <h1 className="text-xl font-extrabold text-neutral-900 dark:text-neutral-100 tracking-tight">
-            Daftar Proyek PRD
-          </h1>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Kelola dan buka kembali dokumen PRD beserta visualisasi diagram alur yang pernah Anda buat.
+    <div>
+      <div className="app-page-head">
+        <div className="app-page-head__copy">
+          <h1 className="app-page-title">Proyek PRD</h1>
+          <p className="app-page-sub">
+            Satu tempat untuk membuka kembali dokumen, diagram, dan riwayat versi
+            yang pernah dibuat.
           </p>
         </div>
 
-        <Link
-          href="/projects/new"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Buat PRD Baru</span>
-        </Link>
-      </div>
-
-      {/* Projects Grid */}
-      {projects.length === 0 ? (
-        <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl text-center shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center mb-4">
-            <FileText className="w-7 h-7" />
-          </div>
-          <h3 className="text-base font-bold text-neutral-900 dark:text-neutral-100 mb-1">Belum Ada Dokumen PRD</h3>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mb-6">
-            Mulai ide produk Anda sekarang. AI akan membantu mengajukan klarifikasi, merancang PRD lengkap, dan menghasilkan bagan diagram alur.
-          </p>
-          <Link
-            href="/projects/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Mulai Buat PRD Pertama</span>
+        <div className="app-page-actions">
+          <Link href="/projects/new" className="btn btn--primary">
+            <Plus />
+            <span>Buat PRD</span>
           </Link>
         </div>
+      </div>
+
+      {projects.length === 0 ? (
+        <section className="empty-panel" aria-labelledby="empty-projects-title">
+          <p className="app-meta">
+            <FileText />
+            <span>Ruang kerja</span>
+          </p>
+          <h2 id="empty-projects-title" className="empty-panel__title">
+            Belum ada dokumen PRD di sini.
+          </h2>
+          <p className="empty-panel__text">
+            Mulai dengan satu prompt. AI akan menanyakan detail yang kurang,
+            menyusun PRD lengkap, lalu membangun diagram alurnya.
+          </p>
+          <Link href="/projects/new" className="btn btn--primary">
+            <Plus />
+            <span>Mulai dari prompt</span>
+          </Link>
+        </section>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {projects.map((project) => {
-            const versionCount = project.versions?.length || 1;
-            const latestVersion = project.versions?.[0];
-
-            return (
-              <div
-                key={project.id}
-                className="flex flex-col justify-between p-5 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-brand/60 rounded-2xl shadow-sm hover:shadow transition group"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-md text-[10px] font-semibold">
-                      <GitBranch className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
-                      {versionCount} Versi
-                    </span>
-
-                    <button
-                      onClick={() => handleDelete(project.id, project.title)}
-                      disabled={deletingId === project.id}
-                      title="Hapus Proyek"
-                      className="p-1 text-neutral-400 dark:text-neutral-500 hover:text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-
-                  <h3 className="font-bold text-sm text-neutral-900 dark:text-neutral-100 group-hover:text-brand-dark dark:text-brand transition line-clamp-1 mb-1.5">
-                    {project.title}
-                  </h3>
-
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-3 mb-4 leading-relaxed">
-                    {project.initialPrompt}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-[11px] text-neutral-400 dark:text-neutral-500">
-                    <Calendar className="w-3 h-3" />
-                    <span>
-                      {new Date(project.updatedAt).toLocaleDateString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
-                  </div>
-
-                  <Link
-                    href={`/projects/${project.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-brand-dark dark:text-brand transition"
-                  >
-                    <span>Buka Proyek</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
+        <div className="stack stack--lg">
+          <section className="metric-strip" aria-label="Ringkasan proyek">
+            <div className="metric">
+              <div className="metric__label">Proyek</div>
+              <div className="metric__value">{projects.length}</div>
+              <div className="metric__note">Dokumen dalam ruang kerja</div>
+            </div>
+            <div className="metric">
+              <div className="metric__label">Versi tersimpan</div>
+              <div className="metric__value">{totalVersions}</div>
+              <div className="metric__note">Termasuk draf dan rollback</div>
+            </div>
+            <div className="metric">
+              <div className="metric__label">Terakhir diperbarui</div>
+              <div className="metric__value" style={{ fontSize: "1.05rem", lineHeight: 1.5 }}>
+                {latestProject
+                  ? new Date(latestProject.updatedAt).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "—"}
               </div>
-            );
-          })}
+              <div className="metric__note">
+                {latestProject ? latestProject.title : "Belum ada proyek"}
+              </div>
+            </div>
+          </section>
+
+          <section aria-labelledby="project-list-title">
+            <div className="app-page-head" style={{ marginBottom: 12 }}>
+              <div>
+                <h2 id="project-list-title" className="app-section-title">
+                  Semua proyek
+                </h2>
+                <p className="app-section-sub">
+                  {projects.length} proyek · {totalVersions} versi
+                </p>
+              </div>
+            </div>
+
+            <div className="project-list">
+              {projects.map((project) => {
+                const versionCount = project.versions?.length || 1;
+
+                return (
+                  <article key={project.id} className="project-row">
+                    <div className="project-row__main">
+                      <div className="project-row__top">
+                        <h3 className="project-row__title">
+                          <Link href={`/projects/${project.id}`}>{project.title}</Link>
+                        </h3>
+                        <span className="chip chip--neutral">
+                          <GitBranch />
+                          {versionCount} versi
+                        </span>
+                      </div>
+
+                      <p className="project-row__prompt">{project.initialPrompt}</p>
+
+                      <div className="project-row__meta">
+                        <span>
+                          <Calendar />
+                          {new Date(project.updatedAt).toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </span>
+                        <span>
+                          <FileText />
+                          {project.versions?.[0]?.prdContent
+                            ? "PRD tersedia"
+                            : "Draf awal"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="project-row__actions">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(project.id, project.title)}
+                        disabled={deletingId === project.id}
+                        title="Hapus proyek"
+                        aria-label={`Hapus proyek ${project.title}`}
+                        className="project-row__delete"
+                      >
+                        {deletingId === project.id ? (
+                          <Loader2 className="animate-spin" />
+                        ) : (
+                          <Trash2 />
+                        )}
+                      </button>
+
+                      <Link href={`/projects/${project.id}`} className="project-row__open">
+                        <span>Buka</span>
+                        <ArrowRight />
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         </div>
       )}
     </div>

@@ -4,11 +4,10 @@ import { Navbar } from "@/components/layout/Navbar";
 /**
  * Shell for the working app (projects, admin, login).
  *
- * The root layout only owns `<html>`/`<body>` and the providers, so each route
- * group supplies its own top-level chrome. Everything in this group keeps the
- * sticky global navbar and the constrained, padded column the app was built
- * around; the marketing landing page draws its own full-bleed frame instead and
- * therefore lives in the sibling `(marketing)` group.
+ * The root layout owns the document providers and the app stylesheet; this
+ * group draws the studio frame: a plain sticky header, the 1320px work canvas
+ * and a quiet closing line. The landing page keeps its own full-bleed frame in
+ * the sibling `(marketing)` group.
  */
 export default function AppLayout({
   children,
@@ -16,11 +15,13 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div className="app-shell">
       <Navbar />
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {children}
-      </main>
-    </>
+      <main className="app-main">{children}</main>
+      <footer className="app-footer">
+        <span className="app-footer__brand">PRD Maker</span>
+        <span>Prompt menjadi PRD, diagram, dan riwayat versi.</span>
+      </footer>
+    </div>
   );
 }

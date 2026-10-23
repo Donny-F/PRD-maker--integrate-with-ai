@@ -5,7 +5,13 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { api, LlmModel } from "@/lib/api";
 import { LlmModelSelect } from "@/components/ui/LlmModelSelect";
-import { Sparkles, Bot, HelpCircle, ArrowRight, SkipForward, Loader2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRight,
+  HelpCircle,
+  Loader2,
+  SkipForward,
+} from "lucide-react";
 
 interface QuestionItem {
   id: string;
@@ -13,6 +19,13 @@ interface QuestionItem {
   context?: string;
   answer?: string;
 }
+
+const FLOW_STEPS = [
+  { label: "Ide & prompt awal" },
+  { label: "Klarifikasi AI" },
+  { label: "Dokumen PRD" },
+  { label: "Diagram alur" },
+] as const;
 
 export default function NewProjectPage() {
   const { data: session, status } = useSession();
@@ -141,50 +154,91 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-4">
-      {/* Step Indicator Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-2">
-          <span className={currentStep === 1 ? "text-neutral-900 dark:text-neutral-100 font-bold" : "text-neutral-400 dark:text-neutral-500"}>
-            Step 1: Ide & Prompt Awal
-          </span>
-          <span className={currentStep === 2 ? "text-neutral-900 dark:text-neutral-100 font-bold" : "text-neutral-400 dark:text-neutral-500"}>
-            Step 2: Klarifikasi AI
-          </span>
-          <span className="text-neutral-400 dark:text-neutral-500">Step 3-4: Pembuatan PRD & Diagram</span>
-        </div>
-        <div className="w-full bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full overflow-hidden">
+    <div className="create-layout">
+      <aside className="create-aside">
+        <h1 className="create-aside__title">Mulai PRD baru.</h1>
+        <p className="create-aside__text">
+          Tulis idenya sekali. AI akan membaca konteks, menanyakan hal yang belum
+          jelas, lalu menyusun dokumen dan diagram dalam satu alur.
+        </p>
+
+        <ol className="step-rail" aria-label="Tahapan pembuatan PRD">
+          {FLOW_STEPS.map((step, index) => {
+            const stepNumber = index + 1;
+            const state =
+              currentStep > stepNumber
+                ? "done"
+                : currentStep === stepNumber
+                  ? "active"
+                  : "pending";
+
+            return (
+              <li
+                key={step.label}
+                className="step-rail__item"
+                data-state={state}
+                aria-current={state === "active" ? "step" : undefined}
+              >
+                <span className="step-rail__mark" aria-hidden />
+                <span>{step.label}</span>
+              </li>
+            );
+          })}
+        </ol>
+
+        <div
+          className="progress"
+          role="progressbar"
+          aria-label="Progres pembuatan PRD"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={currentStep === 1 ? 25 : 50}
+        >
           <div
-            className="bg-brand h-full transition-all duration-300"
-            style={{ width: currentStep === 1 ? "33%" : "66%" }}
+            className="progress__fill"
+            style={{ width: currentStep === 1 ? "25%" : "50%" }}
           />
         </div>
-      </div>
+        <p className="field-help">
+          Dokumen dan diagram dibuat otomatis setelah klarifikasi selesai.
+        </p>
+      </aside>
 
-      {error && (
-        <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs rounded-xl">
-          {error}
-        </div>
-      )}
-
-      {currentStep === 1 ? (
-        /* STEP 1: PROMPTING AWAL */
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100 dark:border-neutral-800">
-            <div className="w-10 h-10 rounded-xl bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">Mulai Proyek PRD Baru</h2>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Pilih model kecerdasan buatan dan jelaskan ide produk Anda sedetail mungkin.
-              </p>
-            </div>
+      <section className="panel form-panel">
+        <div className="panel__head" style={{ padding: 0, border: 0, marginBottom: 20 }}>
+          <div>
+            <h2 className="app-section-title">
+              {currentStep === 1 ? "Ide & prompt awal" : "Klarifikasi AI"}
+            </h2>
+            <p className="app-section-sub">
+              {currentStep === 1
+                ? "Pilih model dan jelaskan produk yang ingin dibangun."
+                : "Jawab yang relevan, atau lewati dan biarkan AI memakai asumsi default."}
+            </p>
           </div>
+          {currentStep === 2 && (
+            <button
+              type="button"
+              onClick={handleSkipClarifications}
+              disabled={isSubmittingStep2}
+              className="btn btn--secondary btn--sm"
+            >
+              <SkipForward />
+              <span>Lewati klarifikasi</span>
+            </button>
+          )}
+        </div>
 
-          <form onSubmit={handleStep1Submit} className="space-y-5">
-            {/* Model Selector */}
-            <div>
+        {error && (
+          <div className="notice notice--danger" style={{ marginBottom: 18 }}>
+            <AlertCircle />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {currentStep === 1 ? (
+          <form onSubmit={handleStep1Submit}>
+            <div className="form-grid">
               <LlmModelSelect
                 models={models}
                 value={selectedModelId}
@@ -192,174 +246,173 @@ export default function NewProjectPage() {
                 isLoading={isLoadingModels}
               />
               {!isLoadingModels && models.some((m) => m.isAvailable === false) && (
-                <p className="mt-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-                  Model yang limitnya habis dinonaktifkan sementara sampai masa cooldown berakhir.
+                <p className="notice notice--warning">
+                  <AlertCircle />
+                  <span>
+                    Model yang limitnya habis dinonaktifkan sementara sampai masa
+                    cooldown berakhir.
+                  </span>
                 </p>
               )}
               {!isLoadingModels && models.length > 0 && !models.some((m) => m.isAvailable !== false) && (
-                <p className="mt-1.5 text-[11px] text-rose-600 dark:text-rose-400">
-                  Semua model sedang mencapai limit. Tunggu masa cooldown atau hubungi admin.
+                <p className="notice notice--danger">
+                  <AlertCircle />
+                  <span>
+                    Semua model sedang mencapai limit. Tunggu masa cooldown atau
+                    hubungi admin.
+                  </span>
                 </p>
               )}
+
+              <div>
+                <label htmlFor="project-title" className="field-label">
+                  Nama proyek
+                </label>
+                <input
+                  id="project-title"
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Contoh: Marketplace B2B Hasil Tani Nusantara"
+                  required
+                  className="field"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="project-prompt" className="field-label">
+                  Ide & kebutuhan produk
+                </label>
+                <textarea
+                  id="project-prompt"
+                  value={initialPrompt}
+                  onChange={(e) => setInitialPrompt(e.target.value)}
+                  rows={8}
+                  placeholder="Jelaskan apa yang ingin dibangun, masalah yang diselesaikan, target pengguna, dan fitur utama yang dibayangkan..."
+                  required
+                  className="field"
+                />
+                <p className="field-help">
+                  Semakin spesifik konteksnya, semakin sedikit pertanyaan lanjutan
+                  yang perlu dijawab.
+                </p>
+              </div>
             </div>
 
-            {/* Project Title */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                Nama / Judul Proyek
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Contoh: Marketplace B2B Hasil Tani Nusantara"
-                required
-                className="w-full px-3.5 py-2.5 text-xs border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-              />
-            </div>
-
-            {/* Initial Prompt */}
-            <div>
-              <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
-                Deskripsi Ide & Kebutuhan Proyek
-              </label>
-              <textarea
-                value={initialPrompt}
-                onChange={(e) => setInitialPrompt(e.target.value)}
-                rows={7}
-                placeholder="Jelaskan apa yang ingin Anda bangun, masalah yang diselesaikan, target pengguna, dan fitur-fitur utama yang dibayangkan..."
-                required
-                className="w-full px-3.5 py-3 text-xs leading-relaxed border border-neutral-300 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand resize-y"
-              />
-            </div>
-
-            {/* Submit Step 1 */}
-            <div className="pt-2 flex justify-end">
+            <div className="form-actions">
+              <span className="field-help">
+                Langkah berikutnya: klarifikasi singkat dari model terpilih.
+              </span>
               <button
                 type="submit"
-                disabled={isSubmittingStep1 || !title.trim() || !initialPrompt.trim() || !selectedModelId}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition disabled:opacity-50"
+                disabled={
+                  isSubmittingStep1 ||
+                  !title.trim() ||
+                  !initialPrompt.trim() ||
+                  !selectedModelId
+                }
+                className="btn btn--primary"
               >
                 {isSubmittingStep1 ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Menganalisis Ide & Menyiapkan Pertanyaan...</span>
+                    <Loader2 className="animate-spin" />
+                    <span>Menyiapkan pertanyaan...</span>
                   </>
                 ) : (
                   <>
-                    <span>Lanjut ke Klarifikasi AI</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Lanjut ke klarifikasi</span>
+                    <ArrowRight />
                   </>
                 )}
               </button>
             </div>
           </form>
-        </div>
-      ) : (
-        /* STEP 2: KLARIFIKASI AI */
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-100 dark:border-neutral-800">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand/15 text-brand-dark dark:text-brand flex items-center justify-center">
-                <Bot className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-neutral-900 dark:text-neutral-100">Step 2: Pertanyaan Klarifikasi AI</h2>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                  AI telah menganalisis ide Anda dan memerlukan detail berikut untuk menyusun PRD yang optimal.
-                </p>
-              </div>
+        ) : (
+          <form onSubmit={handleStep2Submit}>
+            <div className="notice notice--info" style={{ marginBottom: 18 }}>
+              <HelpCircle />
+              <span>
+                Model yang dipilih di bawah dipakai untuk menyusun PRD setelah
+                jawaban dikirim.
+              </span>
             </div>
 
-            {/* Skip Button (Per PRD specification) */}
-            <button
-              type="button"
-              onClick={handleSkipClarifications}
-              disabled={isSubmittingStep2}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded-lg transition"
-            >
-              <SkipForward className="w-3.5 h-3.5" />
-              <span>Lewati Klarifikasi & Langsung Buat PRD</span>
-            </button>
-          </div>
+            <div style={{ marginBottom: 20 }}>
+              <LlmModelSelect
+                models={models}
+                value={selectedModelId}
+                onChange={setSelectedModelId}
+                isLoading={isLoadingModels}
+                label="Model LLM untuk membuat PRD"
+              />
+            </div>
 
-          {/* Model used for the PRD generation (clarifications already generated above) */}
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-            <LlmModelSelect
-              models={models}
-              value={selectedModelId}
-              onChange={setSelectedModelId}
-              isLoading={isLoadingModels}
-              label="Model LLM untuk Membuat PRD"
-              className="sm:w-96"
-            />
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 sm:pb-2.5">
-              Pertanyaan klarifikasi sudah dibuat. Model ini dipakai untuk menyusun dokumen PRD
-              setelah jawaban dikirim.
-            </p>
-          </div>
+            <div className="stack">
+              {questions.map((q, idx) => (
+                <div key={q.id} className="question-card">
+                  <div className="question-card__head">
+                    <span className="question-card__number" aria-hidden>
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <h3 className="question-card__question">{q.question}</h3>
+                      {q.context && (
+                        <p className="question-card__context">
+                          <HelpCircle />
+                          <span>{q.context}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-          <form onSubmit={handleStep2Submit} className="space-y-5">
-            {questions.map((q, idx) => (
-              <div key={q.id} className="p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50">
-                <div className="flex items-start gap-2.5 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-brand text-neutral-950 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-neutral-900 dark:text-neutral-100 leading-snug">{q.question}</h4>
-                    {q.context && (
-                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 flex items-center gap-1">
-                        <HelpCircle className="w-3 h-3 text-neutral-400 dark:text-neutral-500 shrink-0" />
-                        {q.context}
-                      </p>
-                    )}
-                  </div>
+                  <label htmlFor={`answer-${q.id}`} className="field-label" style={{ marginTop: 10 }}>
+                    Jawaban
+                  </label>
+                  <textarea
+                    id={`answer-${q.id}`}
+                    value={answers[q.id] || ""}
+                    onChange={(e) =>
+                      setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                    }
+                    rows={2}
+                    placeholder="Ketik jawaban atau preferensi Anda..."
+                    className="field"
+                  />
                 </div>
+              ))}
+            </div>
 
-                <textarea
-                  value={answers[q.id] || ""}
-                  onChange={(e) =>
-                    setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
-                  }
-                  rows={2}
-                  placeholder="Ketik jawaban atau preferensi Anda..."
-                  className="w-full mt-2 px-3 py-2 text-xs border border-neutral-300 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand"
-                />
-              </div>
-            ))}
-
-            <div className="pt-3 flex items-center justify-between">
+            <div className="form-actions" style={{ marginTop: 22 }}>
               <button
                 type="button"
                 onClick={handleSkipClarifications}
                 disabled={isSubmittingStep2}
-                className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:text-neutral-200 font-medium"
+                className="btn btn--quiet"
               >
-                Lewati pertanyaan dan gunakan asumsi default AI
+                Gunakan asumsi default AI
               </button>
 
               <button
                 type="submit"
                 disabled={isSubmittingStep2}
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand hover:bg-brand-hover text-neutral-950 font-bold text-xs rounded-xl shadow-sm transition disabled:opacity-50"
+                className="btn btn--primary"
               >
                 {isSubmittingStep2 ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Menyiapkan Dokumen PRD...</span>
+                    <Loader2 className="animate-spin" />
+                    <span>Menyiapkan PRD...</span>
                   </>
                 ) : (
                   <>
-                    <span>Kirim Jawaban & Buat PRD</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Kirim jawaban & buat PRD</span>
+                    <ArrowRight />
                   </>
                 )}
               </button>
             </div>
           </form>
-        </div>
-      )}
+        )}
+      </section>
     </div>
   );
 }

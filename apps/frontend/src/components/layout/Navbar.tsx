@@ -4,125 +4,133 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { LayoutDashboard, PlusCircle, ShieldAlert, LogOut, User } from "lucide-react";
+import { LayoutDashboard, PlusCircle, ShieldAlert, LogOut } from "lucide-react";
 import { BrandMark } from "./BrandMark";
 import { ThemeToggle } from "./ThemeToggle";
 
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+};
+
+/**
+ * One link list, used by the desktop bar and the scrollable mobile row.
+ *
+ * Keeping the markup in a component rather than a render helper means both
+ * breakpoints cannot drift apart while the active-route rule stays in one place.
+ */
+function NavLinks({
+  items,
+  pathname,
+  mobile = false,
+}: {
+  items: NavItem[];
+  pathname: string;
+  mobile?: boolean;
+}) {
+  return (
+    <nav
+      className={mobile ? "app-nav__mobile" : "app-nav__links"}
+      aria-label={mobile ? "Navigasi utama seluler" : "Navigasi utama"}
+    >
+      {items.map((item) => {
+        const active =
+          item.href === "/projects"
+            ? pathname === "/projects"
+            : pathname.startsWith(item.href);
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="app-nav__link"
+            data-active={active ? "true" : "false"}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+/**
+ * Shell navigation for the working app.
+ *
+ * It mirrors the landing page's plain header: a wordmark, a short row of text
+ * links and one dark session action. The mobile version repeats the same links
+ * in a horizontally scrollable row, so no navigation job depends on a hidden
+ * hamburger.
+ */
 export function Navbar() {
   const { data: session } = useSession();
   const pathname = usePathname();
 
   const isAdmin = session?.user?.role === "ADMIN";
+  const items: NavItem[] = [
+    { href: "/projects", label: "Proyek", icon: <LayoutDashboard /> },
+    { href: "/projects/new", label: "Buat PRD", icon: <PlusCircle /> },
+    ...(isAdmin
+      ? [{ href: "/admin", label: "Admin", icon: <ShieldAlert /> }]
+      : []),
+  ];
+
+  const displayName = session?.user?.name || session?.user?.email || "Akun";
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-neutral-950/95 backdrop-blur border-b border-neutral-200 dark:border-neutral-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand Logo */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <BrandMark className="w-9 h-9 rounded-lg group-hover:scale-105 transition-transform" />
-            <div>
-              <span className="font-extrabold text-base tracking-tight text-neutral-900 dark:text-neutral-100">
-                PRD <span className="text-brand-dark dark:text-brand">Maker</span>
-              </span>
-              <span className="block text-[9px] font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-widest -mt-1">
-                AI Architect MVP
-              </span>
-            </div>
+    <header className="app-nav">
+      <div className="app-nav__inner">
+        <div className="app-nav__bar">
+          <Link href="/" className="app-nav__brand" aria-label="PRD Maker, ke beranda">
+            <BrandMark
+              className="h-9 w-9 rounded-[10px]"
+              iconClassName="h-[18px] w-[18px]"
+            />
+            <span className="app-nav__wordmark">
+              PRD Maker
+            </span>
           </Link>
 
-          {/* Navigation Links */}
-          {session && (
-            <nav className="hidden md:flex items-center gap-1 text-xs font-medium">
-              <Link
-                href="/projects"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
-                  pathname === "/projects"
-                    ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50 font-semibold"
-                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900"
-                }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                Daftar Proyek
-              </Link>
+          {session ? <NavLinks items={items} pathname={pathname} /> : null}
 
-              <Link
-                href="/projects/new"
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
-                  pathname === "/projects/new"
-                    ? "bg-neutral-100 dark:bg-neutral-800 text-neutral-950 dark:text-neutral-50 font-semibold"
-                    : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900"
-                }`}
-              >
-                <PlusCircle className="w-3.5 h-3.5 text-brand-dark dark:text-brand" />
-                Buat PRD Baru
-              </Link>
-
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
-                    pathname === "/admin"
-                      ? "bg-brand/20 text-brand-dark dark:text-brand font-semibold border border-brand/40"
-                      : "text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-50 dark:hover:bg-neutral-900"
-                  }`}
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 text-brand-dark dark:text-brand" />
-                  Panel Admin
-                </Link>
-              )}
-            </nav>
-          )}
-        </div>
-
-        {/* Right Session Controls */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ThemeToggle />
-          {session ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300">
-                  <User className="w-4 h-4" />
-                </div>
-                <div className="hidden sm:block text-left">
-                  <div className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 leading-none">
-                    {session.user.name || session.user.email}
-                  </div>
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <span
-                      className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                        isAdmin
-                          ? "bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800"
-                          : "hidden bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800"
-                      }`}
-                    >
-                      {session.user.role}
+          <div className="app-nav__actions">
+            <ThemeToggle />
+            {session ? (
+              <>
+                <div className="app-nav__user">
+                  <span className="app-nav__avatar" aria-hidden>
+                    {initial}
+                  </span>
+                  <span className="app-nav__identity">
+                    <span className="app-nav__name">{displayName}</span>
+                    <span className="app-nav__role">
+                      {isAdmin ? "Admin" : "Anggota"}
                     </span>
-                    <span className="text-[11px] text-neutral-400 dark:text-neutral-500">{session.user.email}</span>
-                  </div>
+                  </span>
                 </div>
-              </div>
-
-              <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
-                title="Keluar"
-                className="p-1.5 text-neutral-500 dark:text-neutral-400 hover:text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-              // LOGIN BUTTON
-              <Link
-                hidden={pathname == "/login"}
-                href="/login"
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand hover:bg-brand-hover text-neutral-950 transition shadow-sm"
-              >
-                Masuk / Login
-              </Link>
-            )
-          }
+                <button
+                  type="button"
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  title="Keluar"
+                  aria-label="Keluar"
+                  className="btn btn--quiet btn--icon"
+                >
+                  <LogOut />
+                </button>
+              </>
+            ) : (
+              pathname !== "/login" && (
+                <Link href="/login" className="btn btn--primary btn--sm">
+                  Masuk
+                </Link>
+              )
+            )}
+          </div>
         </div>
+        {session ? <NavLinks items={items} pathname={pathname} mobile /> : null}
       </div>
     </header>
   );
